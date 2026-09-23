@@ -67,9 +67,12 @@ Dat is niet erg: er verandert niets voor andere kinderen. Sluit gewoon het tabbl
   of -map. Er is geen database en geen servercode nodig.
 - Bestaande klaslinks blijven werken: vervang alleen het deel vóór het `#`-teken door het
   nieuwe adres.
-- Wil je een klaslink als nieuwe standaard-beginset instellen? Gebruik (rechtstreeks met
-  `node`, niet via `npm run`, anders komt npm's eigen tekst tussen de uitvoer):
-  `node tools/link.mjs --decode "<link>" --module > app/data/beginset.js`
+- Wil je een klaslink als nieuwe standaard-beginset instellen? Gebruik `--out` om het
+  bestand rechtstreeks weg te schrijven:
+  `node tools/link.mjs --decode "<link>" --module --out app/data/beginset.js`
+  (Gebruik niet `> app/data/beginset.js`: op Windows PowerShell 5.1 levert dat een
+  UTF-16-bestand op, en dat geeft een wit scherm in de app. `--out` schrijft altijd
+  gewoon UTF-8.)
   Verhoog daarna `VERSIE` in `app/js/versie.js` én `app/sw.js` (zelfde tekst, beide
   plekken), zodat gebruikers de nieuwe beginset ook echt krijgen. (Of vraag het je eigen
   AI-assistent, zie hieronder.)

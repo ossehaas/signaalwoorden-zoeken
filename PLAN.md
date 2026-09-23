@@ -543,7 +543,7 @@ npm run serve            # → http://localhost:4173/tools/signaalwoorden-zoeken
   - **Zelf neerzetten (ICT):**
     - Download the ZIP and copy the `app/` folder to any HTTPS web server or folder. No database, no server code, no settings.
     - Class links keep working: replace only the part before `#` with the new address.
-    - Optionally, turn a class link into the starting set: `npm run link -- --decode "<link>" > app/data/beginset.js`, or ask your AI.
+    - Optionally, turn a class link into the starting set: `node tools/link.mjs --decode "<link>" --module --out app/data/beginset.js` (use `--out`, not `> file`: on Windows PowerShell 5.1 the redirect writes UTF-16 and gives a white screen), or ask your AI.
   - **Vraag voor je eigen AI** (ready-to-paste block): "Ik gebruik de webapp 'Signaalwoorden zoeken'. De broncode staat op {{REPO_URL}}. Lees eerst HULP.md en AGENTS.md in die repository. Mijn probleem: [beschrijf wat je ziet, op welk apparaat en in welke browser, en sinds wanneer]. Leg in eenvoudige stappen uit wat ik kan doen. Verander niets aan de privacyregels uit AGENTS.md."
   - **Mailen:** via the contact details on the page where you found the app; we look when we can, often within a few days, but there is no guarantee, no fixed response time and it is not a helpdesk.
 - **`AGENTS.md` (English, for any AI coding assistant):**

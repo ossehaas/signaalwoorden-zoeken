@@ -63,7 +63,9 @@ app/
 tests/unit/*.test.mjs      node:test, no browser
 tests/e2e/*.test.mjs        node:test + playwright-core (Edge, channel 'msedge')
 tools/serve.mjs             zero-dependency static server (sub-path or --root)
-tools/link.mjs               encode/decode a klaslink from the CLI
+tools/link.mjs               encode/decode a klaslink from the CLI; `--out <pad>` writes the
+                               result as UTF-8 (use this instead of `> pad`, which writes
+                               UTF-16 on Windows PowerShell 5.1 and gives a white screen)
 tools/make-icons.mjs          renders icons/icon.svg to the PNG sizes the manifest needs
 tools/screenshots.mjs          renders docs/screenshots/*.png
 ```
