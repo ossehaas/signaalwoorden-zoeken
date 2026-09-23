@@ -125,8 +125,10 @@ test('minstens 25% van de doelwoorden staat vooraan, minstens 25% middenin', () 
   assert.ok(midden / zinnen.length >= 0.25, `maar ${midden} van ${zinnen.length} midden`);
 });
 
-test('geen namen: elk hoofdletterwoord dat niet aan het begin van een zin staat, staat op de toegestane lijst', () => {
-  const kapitaalWoord = /^[A-ZÀ-Ö][a-zà-öø-ÿ]*$/;
+test('geen namen: elk woord dat met een hoofdletter begint en niet aan het begin van een zin staat, staat op de toegestane lijst', () => {
+  // Unicode-bewust (\p{Lu}): dit vangt elk woord dat met een hoofdletter start, niet
+  // alleen woorden die als geheel een "nette" naamvorm hebben (zo mist niets per ongeluk).
+  const kapitaalWoord = /^\p{Lu}/u;
   zinnen.forEach((zin, i) => {
     const { voor, woord, na } = parseMarker(zin.tekst);
     const platte = `${voor}${woord}${na}`;
@@ -140,6 +142,23 @@ test('geen namen: elk hoofdletterwoord dat niet aan het begin van een zin staat,
           assert.ok(EIGENNAMEN.has(schoon), `zin #${i}: onverwachte hoofdletter "${schoon}" in "${zinnetje.trim()}"`);
         }
       });
+    }
+  });
+});
+
+test('aantal zinnetjes per zin: Cito 1-3, Basis 1-2 (comma-constructie of een korte antecedentzin)', () => {
+  // Basis is in de plan-tekst "één zin", maar een aantal signaalwoorden (Toch, Daarom, …)
+  // hebben een voorafgaande zin nodig om niet in het luchtledige te wijzen (zie B-A in de
+  // contentreview). Gekozen oplossing, vastgelegd hier én in AGENTS.md: Basis mag 1 of 2
+  // korte zinnen zijn; de meeste blijven 1 zin met een komma-constructie.
+  zinnen.forEach((zin, i) => {
+    const { voor, woord, na } = parseMarker(zin.tekst);
+    const platte = `${voor}${woord}${na}`;
+    const aantalZinnetjes = platte.split(/(?<=[.!?])\s+/).filter((s) => s.trim().length > 0).length;
+    if (zin.niveau === 'C') {
+      assert.ok(aantalZinnetjes >= 1 && aantalZinnetjes <= 3, `Cito-zin #${i} heeft ${aantalZinnetjes} zinnetjes`);
+    } else {
+      assert.ok(aantalZinnetjes >= 1 && aantalZinnetjes <= 2, `Basis-zin #${i} heeft ${aantalZinnetjes} zinnetjes`);
     }
   });
 });

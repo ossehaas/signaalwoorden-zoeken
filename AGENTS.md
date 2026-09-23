@@ -98,11 +98,22 @@ already in use (the test helpers pick a random free port, so the latter is unlik
 
 `app/data/beginset.js` is validated by `tests/unit/beginset.test.mjs`: exact per-type
 counts, exactly one marker per sentence, no other non-weak lexicon word in the sentence
-(so there is exactly one intended signal word), length ranges, word-diversity minimums,
-a ≥25%/≥25% split between sentence-initial and mid-sentence targets, and a names guard
-(no capitalised word outside sentence-initial position unless it's on the `EIGENNAMEN`
-allowlist in that test file). After editing sentences, run `npm test` and read the
-failure messages — they name the exact rule and sentence that failed.
+(so there is exactly one intended signal word), length ranges, a sentence-count rule
+(below), word-diversity minimums, a ≥25%/≥25% split between sentence-initial and
+mid-sentence targets, and a names guard (no capitalised word outside sentence-initial
+position unless it's on the `EIGENNAMEN` allowlist in that test file). After editing
+sentences, run `npm test` and read the failure messages — they name the exact rule and
+sentence that failed.
+
+**Sentence-count rule (decision, round 1 review):** Cito sentences may be 1-3 sentences
+long (unchanged). Basis was originally "exactly 1 sentence" (matching the plan's "one
+short, concrete sentence" wording), but several backward-pointing Basis signal words
+("Toch", "Daarom", "Bovendien", "Eerst") need something to point back to, or they read as
+pointing at nothing. Rather than force every one of those into an awkward comma clause,
+**Basis sentences may be 1 or 2 short sentences.** Most stay 1 sentence with a comma
+("Ze voelde zich niet lekker, maar ze ging wel naar school."); a few use a short second
+sentence for the antecedent ("Het was al laat. Bovendien was hij erg moe."). Keep new
+Basis sentences within this 1-2 rule and the existing 30-110 character range.
 
 ## Known pitfalls
 
