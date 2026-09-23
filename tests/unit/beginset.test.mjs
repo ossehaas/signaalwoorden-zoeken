@@ -175,3 +175,22 @@ test('voor elke zin zijn er geldige Invullen-opties', () => {
     assert.equal(new Set(opties.map((o) => o.toLowerCase())).size, opties.length, `zin #${i}: dubbele opties`);
   });
 });
+
+// C (ronde 3): "pas", "na" en "nu" zijn zelf tijd-achtige woorden die niet in het lexicon
+// staan (zie soorten.js, vindTweedeSignaalwoord). In een tijd-zin (soort "ti") kan zo'n los
+// woord buiten de marker een kind laten twijfelen ("is 'pas' misschien het signaalwoord?"),
+// ook al telt Aanwijzen het niet fout. B8 (ronde 3, content-review) verving de betrokken
+// zinnen; deze test bewaakt dat voor de hele beginset, niet alleen die drie gevallen.
+test('in een tijd-zin bevat de tekst buiten de marker geen "pas", "na" of "nu" als los woord', () => {
+  const verbodenWoorden = ['pas', 'na', 'nu'];
+  zinnen.filter((z) => z.soort === 'ti').forEach((zin, i) => {
+    const { voor, woord, na } = parseMarker(zin.tekst);
+    const buiten = `${voor} ${na}`;
+    for (const verboden of verbodenWoorden) {
+      assert.equal(
+        bevatFraseBuitenMarker(buiten, verboden), false,
+        `tijd-zin "${zin.tekst}" bevat "${verboden}" als los woord buiten de marker "${woord}"`,
+      );
+    }
+  });
+});
