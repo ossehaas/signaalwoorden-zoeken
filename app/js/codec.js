@@ -47,19 +47,20 @@ function base64urlDecode(tekst) {
 
 // ---------- deflate-raw compressie ----------
 
-async function leesAlleChunks(readable, maxBytes) {
-  const reader = readable.getReader();
+// Leest een ReadableStream met een bovengrens, via pipeTo naar een tellende
+// WritableStream. Dit is de robuuste, bewezen manier om streams leeg te lezen
+// (een handmatige reader/writer-lus bleek in Edge te kunnen vastlopen).
+async function leesBegrensd(readableStream, maxBytes) {
   const chunks = [];
   let totaal = 0;
-  for (;;) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    totaal += value.length;
-    if (maxBytes !== undefined && totaal > maxBytes) {
-      throw new LinkFout('De link is te groot.');
-    }
-    chunks.push(value);
-  }
+  const schrijfbaar = new WritableStream({
+    write(chunk) {
+      totaal += chunk.length;
+      if (totaal > maxBytes) throw new Error('TE_GROOT');
+      chunks.push(chunk);
+    },
+  });
+  await readableStream.pipeTo(schrijfbaar);
   const resultaat = new Uint8Array(totaal);
   let offset = 0;
   for (const chunk of chunks) {
@@ -70,29 +71,16 @@ async function leesAlleChunks(readable, maxBytes) {
 }
 
 async function comprimeer(bytes) {
-  const stream = new CompressionStream('deflate-raw');
-  const schrijver = stream.writable.getWriter();
-  schrijver.write(bytes);
-  schrijver.close();
-  return leesAlleChunks(stream.readable);
+  const stream = new Blob([bytes]).stream().pipeThrough(new CompressionStream('deflate-raw'));
+  return leesBegrensd(stream, Infinity);
 }
 
 async function decomprimeer(bytes) {
-  const stream = new DecompressionStream('deflate-raw');
-  const schrijver = stream.writable.getWriter();
-  const schrijfBelofte = schrijver.write(bytes).catch(() => {
-    throw new LinkFout('De link is beschadigd.');
-  });
-  schrijver.close().catch(() => {});
+  const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
   try {
-    await schrijfBelofte;
-  } catch {
-    throw new LinkFout('De link is beschadigd.');
-  }
-  try {
-    return await leesAlleChunks(stream.readable, MAX_DECOMPRESSED_BYTES);
+    return await leesBegrensd(stream, MAX_DECOMPRESSED_BYTES);
   } catch (fout) {
-    if (fout instanceof LinkFout) throw fout;
+    if (fout instanceof Error && fout.message === 'TE_GROOT') throw new LinkFout('De link is te groot.');
     throw new LinkFout('De link is beschadigd.');
   }
 }

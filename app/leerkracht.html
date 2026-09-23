@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
+<title>Zinnen (leerkracht) — Signaalwoorden zoeken</title>
+<link rel="stylesheet" href="./css/app.css">
+<link rel="icon" href="./icons/icon.svg" type="image/svg+xml">
+</head>
+<body>
+<header class="app-header">
+  <p class="app-merk">Signaalwoorden zoeken — Zinnen (leerkracht)</p>
+  <button type="button" id="knop-terug" class="knop knop--outline knop--klein op-blauw terug-knop">Terug naar start</button>
+</header>
+
+<main id="hoofd">
+  <div class="leerkracht-kop">
+    <h1 id="titel" tabindex="-1">Zinnen beheren</h1>
+    <div class="segment" id="niveau-segment">
+      <label><input type="radio" name="filter-niveau" value="B"><span>Basis</span></label>
+      <label><input type="radio" name="filter-niveau" value="C" checked><span>Cito</span></label>
+    </div>
+  </div>
+
+  <div id="gewijzigd-melding" class="melding melding--oranje" role="status" hidden>
+    <svg aria-hidden="true" viewBox="0 0 24 24" width="24" height="24"><circle cx="12" cy="12" r="10" fill="none" stroke="#c2410c" stroke-width="2"/><path d="M12 7v6M12 16v.5" stroke="#c2410c" stroke-width="2" stroke-linecap="round"/></svg>
+    <div>
+      <p class="melding-titel">Je zinnen zijn gewijzigd. Vervang de link op de startpagina.</p>
+      <p class="melding-sub">Zolang je dit niet doet, werken de Chromebooks nog met de oude zinnen.</p>
+      <div class="link-actie">
+        <button type="button" id="knop-link-bijwerken" class="knop knop--outline knop--klein">Link bijwerken</button>
+        <button type="button" id="knop-link-kopieren" class="knop knop--klein knop--oranje">Kopieer nieuwe link</button>
+      </div>
+      <label for="link-veld" class="sr-only">De klaslink</label>
+      <input type="text" id="link-veld" class="link-veld" readonly hidden>
+    </div>
+  </div>
+
+  <div id="gekopieerd-melding" class="melding melding--groen" role="status" hidden>
+    <svg aria-hidden="true" viewBox="0 0 24 24" width="24" height="24"><circle cx="12" cy="12" r="11" fill="#1a7a51"/><path d="M7 12l3.2 3.2L17 8.5" stroke="#fff" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <p class="melding-titel">Gekopieerd. Zet deze link nu op de startpagina.</p>
+  </div>
+
+  <p class="help-tekst">Je zinnen staan in de link op de startpagina. Open die link op elke computer om verder te werken.</p>
+
+  <div class="melding melding--blauw">
+    <svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20"><circle cx="12" cy="12" r="10" fill="none" stroke="#2563a8" stroke-width="2"/><path d="M12 8v.5M12 11v5" stroke="#2563a8" stroke-width="2" stroke-linecap="round"/></svg>
+    <p class="melding-titel melding-titel--vast">Niet voor namen of persoonsgegevens. Gebruik verzonnen namen.</p>
+  </div>
+
+  <div class="paneel">
+    <div class="naam-rij">
+      <div class="naam-veld-blok veldgroep">
+        <label for="naam-veld">Naam van de set</label>
+        <input type="text" id="naam-veld" class="veld" maxlength="40" aria-describedby="naam-hint">
+        <p class="veld-hint" id="naam-hint">Geen namen, alleen de groep</p>
+      </div>
+      <a href="./handleiding.html" target="_blank" rel="noopener" class="knop--tekst">Handleiding (A4)</a>
+    </div>
+  </div>
+
+  <div class="paneel">
+    <div class="zinnen-lijst-kop">
+      <h2 id="lijst-titel">Zinnen — niveau Cito</h2>
+      <span class="zin-aantal" id="zin-aantal"></span>
+    </div>
+    <button type="button" id="knop-nieuwe-zin" class="knop knop--outline nieuwe-zin-knop">Nieuwe zin</button>
+    <ul class="zinnen-lijst" id="zinnen-lijst"></ul>
+
+    <form class="zin-form" id="zin-form" hidden aria-labelledby="zin-form-titel">
+      <h3 id="zin-form-titel">Nieuwe zin toevoegen</h3>
+      <div class="veldgroep">
+        <label for="zin-tekst">Zin</label>
+        <textarea id="zin-tekst" class="veld" rows="3" aria-describedby="zin-tekst-fout"></textarea>
+        <p class="veld-fout" id="zin-tekst-fout" hidden></p>
+      </div>
+      <div class="veldgroep">
+        <p id="markeer-label">Klik het signaalwoord in de zin aan om het te markeren.</p>
+        <div class="markeer-woorden" id="markeer-woorden" aria-labelledby="markeer-label"></div>
+        <p class="veld-fout" id="marker-fout" hidden>Klik het signaalwoord aan.</p>
+      </div>
+      <div class="form-rij">
+        <div class="veldgroep">
+          <label for="soort-veld">Soort</label>
+          <select id="soort-veld" class="veld" aria-describedby="soort-fout"></select>
+          <p class="veld-fout" id="soort-fout" hidden>Dit soort hoort niet bij niveau Basis.</p>
+        </div>
+        <div class="veldgroep">
+          <label for="niveau-veld">Niveau</label>
+          <select id="niveau-veld" class="veld">
+            <option value="C">Cito</option>
+            <option value="B">Basis</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-knoppen">
+        <button type="submit" id="knop-zin-opslaan" class="knop knop--groen">Zin toevoegen</button>
+        <button type="button" id="knop-zin-annuleren" class="knop knop--outline">Annuleren</button>
+        <button type="button" id="knop-zin-verwijderen" class="knop knop--outline knop--rood" hidden>Verwijderen</button>
+      </div>
+    </form>
+  </div>
+
+  <p class="extra-rij"><a href="#" id="knop-opslaan-bestand" class="knop--tekst">Extra: opslaan als bestand</a></p>
+</main>
+
+<footer class="app-footer"><p class="voetnoot">versie <span id="versie-tekst"></span></p></footer>
+
+<script type="module" src="./js/leerkracht.js"></script>
+<script type="module" src="./js/sw-register.js"></script>
+</body>
+</html>

@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
+<title>Signaalwoorden zoeken</title>
+<link rel="stylesheet" href="./css/app.css">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" href="./icons/icon.svg" type="image/svg+xml">
+</head>
+<body>
+<header class="app-header">
+  <p class="app-merk">Signaalwoorden zoeken</p>
+  <div class="oefen-status" id="oefen-status" hidden>
+    <span id="oefen-status-zin"></span>
+    <span class="voortgangsbalk" role="progressbar" id="voortgangsbalk" aria-valuemin="0" aria-valuemax="10" aria-valuenow="0">
+      <span class="voortgangsbalk-vulling" id="voortgangsbalk-vulling"></span>
+    </span>
+    <span class="dier-chip" id="dier-chip"></span>
+  </div>
+  <button type="button" id="knop-leerkracht" class="knop knop--outline knop--klein op-blauw">Leerkracht</button>
+</header>
+<p class="info-regel" id="info-regel"></p>
+
+<main id="hoofd">
+
+  <section id="scherm-linkfout" hidden aria-labelledby="linkfout-titel">
+    <div class="paneel">
+      <h1 id="linkfout-titel" tabindex="-1">Deze link is niet compleet of beschadigd</h1>
+      <p id="linkfout-bericht">Open de link opnieuw via de startpagina. Werkt het dan nog niet? Vraag je juf of meester om een nieuwe link.</p>
+      <button type="button" id="knop-standaardzinnen" class="knop knop--groen">Oefenen met de standaardzinnen</button>
+    </div>
+  </section>
+
+  <section id="scherm-start" aria-labelledby="start-titel">
+    <h1 id="start-titel" tabindex="-1">Kies je dier, je niveau en je oefening</h1>
+    <p class="hint-tekst">Geen naam nodig. Kies gewoon een dier en begin.</p>
+
+    <form id="start-form" autocomplete="off">
+      <div class="paneel">
+        <p class="stap-titel"><span class="stap-nummer" aria-hidden="true">1</span> Kies je dier</p>
+        <div class="keuze-rooster" id="dieren-rooster" role="radiogroup" aria-label="Kies je dier"></div>
+      </div>
+
+      <div class="paneel">
+        <p class="stap-titel"><span class="stap-nummer" aria-hidden="true">2</span> Kies je niveau</p>
+        <div class="keuze-rooster keuze-rooster--niveau" id="niveau-rooster" role="radiogroup" aria-label="Kies je niveau"></div>
+      </div>
+
+      <div class="paneel">
+        <p class="stap-titel"><span class="stap-nummer" aria-hidden="true">3</span> Kies je oefenvorm</p>
+        <div class="keuze-rooster keuze-rooster--vorm" id="vorm-rooster" role="radiogroup" aria-label="Kies je oefenvorm"></div>
+      </div>
+
+      <div class="start-actie">
+        <p class="hint-tekst" id="start-hint">Kies eerst een dier en een niveau.</p>
+        <button type="submit" id="knop-beginnen" class="knop knop--groot knop--groen" disabled>Begin de oefening</button>
+      </div>
+    </form>
+  </section>
+
+  <section id="scherm-oefenen" hidden aria-labelledby="oefenen-titel">
+    <h1 id="oefenen-titel" class="sr-only" tabindex="-1">Oefenen</h1>
+    <div class="oefen-labels">
+      <span class="label-chip label-chip--blauw" id="label-niveau"></span>
+      <span class="label-chip label-chip--geel" id="label-vorm"></span>
+    </div>
+    <p class="instructie" id="instructie-tekst"></p>
+
+    <div class="paneel">
+      <p class="zin-kaart" id="zin-kaart"></p>
+    </div>
+
+    <div class="paneel" id="antwoord-paneel"></div>
+
+    <div class="feedback" id="feedback-paneel" role="status" aria-live="polite" hidden></div>
+
+    <div class="oefen-verder">
+      <button type="button" id="knop-volgende" class="knop knop--groot knop--blauw" hidden>Volgende zin</button>
+    </div>
+  </section>
+
+  <section id="scherm-resultaat" hidden aria-labelledby="resultaat-banner-tekst">
+    <div class="resultaat-banner" id="resultaat-banner">
+      <svg aria-hidden="true" viewBox="0 0 24 24" width="24" height="24"><circle cx="12" cy="12" r="11" fill="#fff" opacity="0.25"/><path d="M12 6v7M12 16v.5" stroke="#fff" stroke-width="2.5" stroke-linecap="round" fill="none"/></svg>
+      <h1 id="resultaat-banner-tekst" tabindex="-1"></h1>
+    </div>
+
+    <div class="paneel">
+      <div class="resultaat-kop">
+        <div class="resultaat-dier">
+          <span id="resultaat-dier-svg" aria-hidden="true"></span>
+          <div>
+            <p class="resultaat-titel" id="resultaat-titel"></p>
+            <p class="resultaat-sub" id="resultaat-sub"></p>
+          </div>
+        </div>
+        <div class="resultaat-score">
+          <div class="resultaat-score-getal" id="resultaat-score-getal"></div>
+          <div class="resultaat-score-label">goed</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="paneel">
+      <h2>Jouw score per soort signaalwoord</h2>
+      <dl class="score-lijst" id="score-lijst"></dl>
+    </div>
+
+    <div class="resultaat-onder">
+      <button type="button" id="knop-nieuwe-ronde" class="knop knop--grijs knop--outline knop--klein">Nieuwe ronde</button>
+    </div>
+  </section>
+
+</main>
+
+<footer class="app-footer"><p class="voetnoot">versie <span id="versie-tekst"></span></p></footer>
+
+<script type="module" src="./js/leerling.js"></script>
+<script type="module" src="./js/sw-register.js"></script>
+</body>
+</html>

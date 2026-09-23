@@ -1,0 +1,24 @@
+/* A4-opmaak voor de handleiding. Past op één pagina bij het printen. */
+
+.a4 {
+  max-width: 210mm;
+  margin: 0 auto;
+  padding: 16px 20px 40px;
+  font-size: 15px;
+  color: var(--kleur-tekst, #1f2937);
+}
+.a4 h1 { font-size: 1.3rem; margin-top: 0.5rem; }
+.a4 h2 { font-size: 1rem; margin-top: 1rem; margin-bottom: 0.3rem; color: var(--kleur-blauw, #2563a8); }
+.a4 p, .a4 li { margin: 0 0 0.35rem; line-height: 1.45; }
+.a4 ol, .a4 ul { margin: 0 0 0.5rem; padding-left: 1.3rem; }
+.niet-printen { display: inline-flex; margin-bottom: 1rem; }
+
+@media print {
+  .niet-printen { display: none !important; }
+  @page { size: A4; margin: 14mm; }
+  body { font-size: 10.5pt; }
+  .a4 { max-width: none; padding: 0; }
+  .a4 h1 { font-size: 15pt; }
+  .a4 h2 { font-size: 11pt; margin-top: 8pt; }
+  .a4 p, .a4 li { line-height: 1.3; }
+}
