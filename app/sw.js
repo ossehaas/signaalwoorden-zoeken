@@ -1,7 +1,7 @@
 // Klassieke (niet-module) service worker: cachet de app-bestanden zodat alles ook
 // zonder internet werkt, en zodat de app blijft werken als onze eigen website plat ligt.
 // VERSIE moet gelijk zijn aan js/versie.js (bewaakt door tests/unit/sw.test.mjs).
-const VERSIE = '1.0.0';
+const VERSIE = '1.1.0';
 const CACHE_NAAM = `signaalwoorden-${VERSIE}`;
 
 // Exact de bestanden onder app/ (plus './' voor de map zelf). Bij elke wijziging aan
