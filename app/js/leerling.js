@@ -9,7 +9,7 @@ import { LinkFout } from './codec.js';
 import { formatteerDatum } from './datum.js';
 import { kiesRonde, nieuweScore, registreerAntwoord, zwaksteSoort, totaalGoed } from './ronde.js';
 import { genereerOpties } from './opties.js';
-import { tokenize, parseMarker, hoofdletter, isMarkerBeginZin } from './zin.js';
+import { tokenize, parseMarker, hoofdletter, isMarkerBeginZin, gepaardeTokenIndexenNaMarker } from './zin.js';
 import { VERSIE } from './versie.js';
 import beginset from '../data/beginset.js';
 
@@ -246,13 +246,16 @@ function renderAanwijzen(zin) {
   // allebei een eigen lexiconwoord zijn (bijv. "ook" bij "niet alleen"), en
   // AANWIJZEN_EXTRA_PAREN voor een functiewoord dat geen eigen signaalwoord is maar wel
   // bij de constructie hoort ("te" bij "om", B-code-4 ronde 2).
-  const gepaardWoord = SIGNAAL_PAREN[woord.toLowerCase()] ?? AANWIJZEN_EXTRA_PAREN[woord.toLowerCase()] ?? null;
-  const gepaardTokenIdxen = [];
-  if (gepaardWoord) {
-    tokens.forEach((t, i) => {
-      if (t.isWoord && !markTokenIdxen.includes(i) && t.tekst.toLowerCase() === gepaardWoord) gepaardTokenIdxen.push(i);
-    });
-  }
+  // A3 (ronde 3): alleen een match NA de gemarkeerde frase telt mee (niet een toevallig
+  // gelijk woord die al eerder in de zin stond), en voor "om" -> "te" telt alleen de
+  // eerste "te" na "om" (er kan verderop in de zin nog een ander "te" staan dat niets met
+  // de constructie te maken heeft).
+  const gepaardeWoordenExtra = AANWIJZEN_EXTRA_PAREN[woord.toLowerCase()];
+  const gepaardWoord = SIGNAAL_PAREN[woord.toLowerCase()] ?? gepaardeWoordenExtra ?? null;
+  const laatsteMarkIdx = markTokenIdxen[markTokenIdxen.length - 1];
+  const gepaardTokenIdxen = gepaardWoord
+    ? gepaardeTokenIndexenNaMarker(tokens, laatsteMarkIdx, gepaardWoord, gepaardeWoordenExtra != null)
+    : [];
 
   // A6/B-code-4 (ronde 2): altijd het soort in de instructie tonen, niet alleen als er
   // toevallig een tweede lexiconwoord in de zin staat. Sommige gevraagde woorden (nu, tot,

@@ -171,6 +171,27 @@ test('B-code-4: bij "om ... te" telt een klik op "te" ook als goed', async () =>
   await afbreken(ctx);
 });
 
+// A3 (ronde 3): een "te" die al VOOR de marker in de zin staat (hier: "te koud") hoort bij
+// een andere zinsnede en mag niet als goed antwoord tellen — alleen de "te" NA "[om]" hoort
+// bij de constructie.
+test('A3: een "te" van vóór de marker telt niet mee als goed antwoord', async () => {
+  const ctx = await opzetten();
+  const zin = testSet({
+    zinnen: [{
+      niveau: 'C', soort: 'do', tekst: 'Het was te koud om buiten te spelen. [Om] warm te blijven, deed ze een dikke trui aan.',
+    }],
+  });
+  const link = await bouwLink(ctx.basisUrl, zin);
+  const page = await ctx.context.newPage();
+  await page.goto(link, { waitUntil: 'networkidle' });
+  await begin(page, { niveau: 'Cito', vorm: 'Aanwijzen' });
+  // De EERSTE "te" in de zin ("te koud") staat vóór de marker: klikken daarop is fout.
+  await page.click('.zin-woord:text-is("te") >> nth=0');
+  await page.waitForTimeout(50);
+  assert.match(await page.textContent('#feedback-paneel'), /Helaas/);
+  await afbreken(ctx);
+});
+
 test('AC13: Invullen toont een leeg vak met opties, en vult na antwoord het juiste woord in', async () => {
   const ctx = await opzetten();
   const link = await bouwLink(ctx.basisUrl, EEN_PER_SOORT);

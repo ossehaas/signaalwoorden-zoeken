@@ -73,21 +73,6 @@ export function isMarkerBeginZin(opgeslagenTekst) {
   return voor.trim().length === 0;
 }
 
-// Zinseinde-leestekens: punt, uitroepteken, vraagteken, dubbele punt, puntkomma.
-const ZINSEINDE_REGEX = /[.!?:;]\s*$/;
-
-/**
- * Is de marker het eerste woord van EEN zin binnen de tekst (dus ook het begin van de
- * tweede zin bij een tweezinnige Cito-opgave, niet alleen het allereerste woord)?
- * Gebruikt voor de hoofdletter-beslissing in opties.js (A2, ronde 2): het doelwoord staat
- * dan met een hoofdletter in de brontekst, dus de afleiders moeten dat ook krijgen, anders
- * verraadt de hoofdletter het antwoord.
- */
-export function isMarkerBeginZinnetje(opgeslagenTekst) {
-  const { voor } = parseMarker(opgeslagenTekst);
-  return voor.trim().length === 0 || ZINSEINDE_REGEX.test(voor);
-}
-
 /** Zet de eerste letter van een woord om naar een hoofdletter (rest blijft gelijk). */
 export function hoofdletter(woord) {
   if (!woord) return woord;
@@ -174,4 +159,30 @@ export function markNaTekstwijziging(nieuwePlatteTekst, gemarkeerdeFrase) {
     if (ok) return { start: woordTokenIdx[w], eind: woordTokenIdx[w + fraseWoorden.length - 1] };
   }
   return null;
+}
+
+/**
+ * Zoekt, voor de oefenvorm Aanwijzen, de tokenindices van een gepaard woord dat ook als
+ * correct antwoord telt (bijv. "te" bij "om", "ook" bij "niet alleen").
+ * A3 (ronde 3): een gepaard woord telt alleen mee als het NA de gemarkeerde frase staat.
+ * Zonder die eis werd bijvoorbeeld een "te" die toevallig VOOR de marker al in de zin
+ * stond ("Het was te koud …, [om] warm te blijven …") ook als goed antwoord gerekend, ook
+ * al hoort die "te" bij een heel andere zinsnede. Voor een paar dat maar één keer kan
+ * slaan (`alleenEerste`, zoals "om" → "te") telt bovendien alleen de EERSTE match na de
+ * marker, niet een latere, toevallige "te" verderop in de rest van de zin.
+ * @param {{isWoord: boolean, tekst: string}[]} tokens
+ * @param {number} markEindIndex - laatste tokenindex van de gemarkeerde frase
+ * @param {string} gepaardWoord - lowercase
+ * @param {boolean} alleenEerste
+ * @returns {number[]}
+ */
+export function gepaardeTokenIndexenNaMarker(tokens, markEindIndex, gepaardWoord, alleenEerste) {
+  const gevonden = [];
+  for (let i = markEindIndex + 1; i < tokens.length; i++) {
+    const token = tokens[i];
+    if (!token.isWoord || token.tekst.toLowerCase() !== gepaardWoord) continue;
+    gevonden.push(i);
+    if (alleenEerste) break;
+  }
+  return gevonden;
 }

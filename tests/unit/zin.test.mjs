@@ -1,8 +1,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  tokenize, parseMarker, naarOpgeslagenTekst, platteZin, isMarkerBeginZin, isMarkerBeginZinnetje,
+  tokenize, parseMarker, naarOpgeslagenTekst, platteZin, isMarkerBeginZin,
   hoofdletter, saniteerInvoer, klikOpWoord, markNaarOpgeslagenTekst, markNaTekstwijziging, ZinFout,
+  gepaardeTokenIndexenNaMarker,
 } from '../../app/js/zin.js';
 
 test('tokenize: interpunctie blijft geen deel van het woord', () => {
@@ -45,18 +46,6 @@ test('isMarkerBeginZin', () => {
   assert.equal(isMarkerBeginZin('Dit is [maar] niet.'), false);
   // isMarkerBeginZin kijkt naar de hele tekst: het begin van een TWEEDE zinnetje telt niet.
   assert.equal(isMarkerBeginZin('Het regende. [Daardoor] was de weg drassig.'), false);
-});
-
-test('isMarkerBeginZinnetje', () => {
-  assert.equal(isMarkerBeginZinnetje('[Maar] toch niet.'), true);
-  assert.equal(isMarkerBeginZinnetje('Dit is [maar] niet.'), false);
-  // A2 (ronde 2): het begin van een tweede zinnetje telt hier wél mee, na een punt,
-  // uitroepteken, vraagteken, dubbele punt of puntkomma.
-  assert.equal(isMarkerBeginZinnetje('Het regende. [Daardoor] was de weg drassig.'), true);
-  assert.equal(isMarkerBeginZinnetje('Het regende! [Daardoor] was de weg drassig.'), true);
-  assert.equal(isMarkerBeginZinnetje('Ze zei dit: [daardoor] was de weg drassig.'), true);
-  // een woord vlak vóór de marker zonder zinseinde-teken telt niet mee.
-  assert.equal(isMarkerBeginZinnetje('Ze zei dit, [daardoor] was de weg drassig.'), false);
 });
 
 test('hoofdletter', () => {
@@ -109,4 +98,24 @@ test('markNaTekstwijziging: houdt de markering aan als de frase nog bestaat', ()
   assert.equal(mark, null);
   const mark2 = markNaTekstwijziging('Nu staat er maar niets meer.', 'maar');
   assert.deepEqual(mark2, { start: 6, eind: 6 });
+});
+
+// A3 (ronde 3): gepaardeTokenIndexenNaMarker mag een match VOOR de marker nooit meetellen,
+// en moet bij alleenEerste=true stoppen na de eerste match NA de marker.
+test('gepaardeTokenIndexenNaMarker: nooit een match vóór de marker, en optioneel maar de eerste erna', () => {
+  const tokens = tokenize('te een te twee te drie te vier');
+  // tokens (woord-tokens): te(0) een(2) te(4) twee(6) te(8) drie(10) te(12) vier(14)
+  // markEindIndex = 4 simuleert dat de marker eindigt op het TWEEDE "te" (index 4): het
+  // EERSTE "te" (index 0) staat er dus vóór en mag nooit worden gevonden.
+  const alleMatches = gepaardeTokenIndexenNaMarker(tokens, 4, 'te', false);
+  assert.deepEqual(alleMatches, [8, 12]);
+  assert.ok(!alleMatches.includes(0), 'een "te" van vóór de marker telt ten onrechte mee');
+
+  const eersteAlleen = gepaardeTokenIndexenNaMarker(tokens, 4, 'te', true);
+  assert.deepEqual(eersteAlleen, [8]);
+});
+
+test('gepaardeTokenIndexenNaMarker: geen match geeft een lege lijst', () => {
+  const tokens = tokenize('dit is een zin zonder het gezochte woord.');
+  assert.deepEqual(gepaardeTokenIndexenNaMarker(tokens, 0, 'te', false), []);
 });
