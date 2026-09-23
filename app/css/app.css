@@ -458,7 +458,14 @@ mark.signaalwoord-markering {
   align-items: center;
 }
 .segment label:has(input:checked) { background: var(--kleur-blauw); color: #fff; }
-.segment label:has(input:focus-visible) { box-shadow: var(--focus-ring); }
+.segment label:has(input:focus-visible) {
+  box-shadow: var(--focus-ring);
+  /* A-minor (ronde 2): de radio zelf heeft opacity:0, dus box-shadow is hier het ENIGE
+     focus-signaal — dat verdwijnt in forced-colors mode (Windows high contrast), waar
+     box-shadow genegeerd wordt maar outline niet. */
+  outline: 3px solid var(--kleur-blauw-donker);
+  outline-offset: 2px;
+}
 
 .leerkracht-kop { display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; }
 

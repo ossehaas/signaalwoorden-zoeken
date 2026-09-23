@@ -64,3 +64,13 @@ test('grote bannertekst (Resultaat) haalt minstens 3:1', () => {
     assert.ok(ratio >= 3, `${label}: ${ratio.toFixed(2)}:1`);
   }
 });
+
+// A-minor (ronde 2): de radio in .segment (niveau/rondefilter) heeft opacity:0, dus
+// box-shadow is daar het enige focus-signaal — dat verdwijnt in forced-colors mode
+// (Windows high contrast negeert box-shadow, maar niet outline). Puur tekst-gebaseerde
+// check op app.css, net als de rest van dit bestand: geen browser nodig.
+test('.segment label:has(input:focus-visible) heeft een outline, niet alleen box-shadow (forced-colors)', () => {
+  const match = /\.segment label:has\(input:focus-visible\)\s*\{([^}]*)\}/.exec(css);
+  assert.ok(match, 'regel .segment label:has(input:focus-visible) niet gevonden in app.css');
+  assert.match(match[1], /outline\s*:\s*\S/, 'geen outline-declaratie: onzichtbaar in forced-colors mode');
+});
