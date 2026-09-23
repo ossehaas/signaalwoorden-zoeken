@@ -236,6 +236,10 @@ function renderHuidigeZin() {
   if (ronde.vorm === 'aanwijzen') renderAanwijzen(zin);
   else if (ronde.vorm === 'soort') renderSoortKiezen(zin);
   else renderInvullen(zin);
+
+  // Elke nieuwe zin is een eigen "stap": focus terug naar de (onzichtbare) kop, zodat
+  // toetsenbordgebruikers altijd op een voorspelbare plek verder kunnen met Tab.
+  $('oefenen-titel').focus();
 }
 
 // ---------- Aanwijzen ----------
@@ -527,11 +531,21 @@ function toonResultaat() {
   toonScherm('scherm-resultaat');
 }
 
+function wisResultaatDom() {
+  $('resultaat-banner-tekst').textContent = '';
+  $('resultaat-titel').textContent = '';
+  $('resultaat-sub').textContent = '';
+  $('resultaat-score-getal').textContent = '';
+  $('resultaat-dier-svg').replaceChildren();
+  $('score-lijst').replaceChildren();
+}
+
 function nieuweRonde() {
   resetRonde();
   gekozenDier = null;
   gekozenNiveau = null;
   gekozenVorm = 'soort';
+  wisResultaatDom();
   renderStartScherm();
   toonScherm('scherm-start');
 }
@@ -539,7 +553,9 @@ function nieuweRonde() {
 // ---------- bfcache: nooit een oud resultaat teruggeven ----------
 
 window.addEventListener('pagehide', () => {
-  resetRonde();
+  // Een bfcache-snapshot bevat de DOM zoals hij nu is: wis dus ook het resultaatscherm
+  // en toon Start, zodat "Terug" nooit een oud resultaat laat zien.
+  nieuweRonde();
 });
 window.addEventListener('pageshow', (e) => {
   if (e.persisted) {
