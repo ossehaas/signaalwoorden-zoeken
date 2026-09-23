@@ -23,6 +23,15 @@ test('regressie: een afgekapte link op leerkracht.html toont de foutmelding, gee
   assert.ok(await page.isVisible('#leerkracht-inhoud'));
   assert.match(await page.textContent('#zin-aantal'), /^\d+ zin/);
   assert.equal(fouten.length, 0, fouten.join('\n'));
+
+  // A1 (ronde 2): na een link-fout moeten alle editor-handlers al gekoppeld zijn, niet
+  // pas na een geslaagde laadVoorLeerkracht. Zonder de fix (koppelHandlers ná de
+  // try/catch) blijft #zin-form hier verborgen en doet "Terug naar start" niets.
+  await page.click('#knop-nieuwe-zin');
+  assert.ok(await page.isVisible('#zin-form'), '"Nieuwe zin" moet het formulier openen na een link-fout');
+  await page.click('#knop-terug');
+  await page.waitForLoadState('networkidle');
+  assert.match(page.url(), /index\.html/, '"Terug naar start" moet navigeren na een link-fout');
   await afbreken(ctx);
 });
 
@@ -94,11 +103,10 @@ function laagRedundanteTekst(seed, lengte) {
   return tekst.slice(0, lengte);
 }
 
-test('regressie: een erg lange link toont de waarschuwing boven 16.000 tekens', async () => {
-  const ctx = await opzetten();
-  // Elke zin op de editor-limiet van 400 tekens (codec.js MAX_ZIN_LENGTE), met
-  // laag-redundante tekst: dezelfde aanpak als tests/unit/linklengte.test.mjs gaf daar
-  // betrouwbaar >15.000 tekens voor 110 zinnen, dus 110 zinnen hier ook >16.000.
+// Elke zin op de editor-limiet van 400 tekens (codec.js MAX_ZIN_LENGTE), met laag-redundante
+// tekst: dezelfde aanpak als tests/unit/linklengte.test.mjs gaf daar betrouwbaar >15.000
+// tekens voor 110 zinnen, dus 110 zinnen hier ook >16.000.
+function bouwLangeZinnenSet() {
   const marker = '[maar]';
   const vullingLengte = 400 - marker.length - 1;
   const zinnen = [];
@@ -106,7 +114,12 @@ test('regressie: een erg lange link toont de waarschuwing boven 16.000 tekens', 
     const vulling = laagRedundanteTekst(i, vullingLengte);
     zinnen.push({ niveau: 'C', soort: 'te', tekst: `${marker} ${vulling}`.slice(0, 400) });
   }
-  const link = await bouwLink(ctx.basisUrl, { naam: 'Lange set', datum: '2026-09-01', zinnen });
+  return { naam: 'Lange set', datum: '2026-09-01', zinnen };
+}
+
+test('regressie: een erg lange link toont de waarschuwing boven 16.000 tekens', async () => {
+  const ctx = await opzetten();
+  const link = await bouwLink(ctx.basisUrl, bouwLangeZinnenSet());
   const page = await ctx.context.newPage();
   await page.goto(`${ctx.basisUrl}leerkracht.html${new URL(link).hash}`, { waitUntil: 'networkidle' });
   await page.fill('#naam-veld', 'Lange set gewijzigd');
@@ -117,6 +130,24 @@ test('regressie: een erg lange link toont de waarschuwing boven 16.000 tekens', 
   console.log(`Lengte van de waarschuwings-testlink: ${veldWaarde.length} tekens.`);
   assert.ok(veldWaarde.length > 16000, `testlink is maar ${veldWaarde.length} tekens: te compressibel om de waarschuwing te toetsen`);
   assert.ok(await page.isVisible('#link-lang-melding'));
+  assert.match(await page.textContent('#link-lang-melding'), /erg lang/);
+  await afbreken(ctx);
+});
+
+test('A3 (ronde 2): de lange-link-waarschuwing blijft zichtbaar na "Kopieer nieuwe link"', async () => {
+  const ctx = await opzetten();
+  await metKlembord(ctx);
+  const link = await bouwLink(ctx.basisUrl, bouwLangeZinnenSet());
+  const page = await ctx.context.newPage();
+  await page.goto(`${ctx.basisUrl}leerkracht.html${new URL(link).hash}`, { waitUntil: 'networkidle' });
+  await page.fill('#naam-veld', 'Lange set gewijzigd');
+  await page.click('#knop-link-kopieren');
+  await page.waitForTimeout(200);
+  // toonGekopieerd() verbergt #gewijzigd-melding volledig; de waarschuwing zat daar eerder
+  // ten onrechte in genest en verdween mee. Ze moet op het hoofdpad ("Kopieer nieuwe link")
+  // zichtbaar blijven, want dat is precies wanneer de leerkracht de link gaat gebruiken.
+  assert.ok(await page.isVisible('#gekopieerd-melding'), 'de groene "gekopieerd"-melding moet zichtbaar zijn');
+  assert.ok(await page.isVisible('#link-lang-melding'), 'de lange-link-waarschuwing moet ook na kopiëren zichtbaar blijven');
   assert.match(await page.textContent('#link-lang-melding'), /erg lang/);
   await afbreken(ctx);
 });

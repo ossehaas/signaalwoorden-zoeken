@@ -343,9 +343,13 @@ function escapeHtml(tekst) {
 
 // ---------- Init ----------
 
-async function init() {
-  $('versie-tekst').textContent = VERSIE;
-
+/**
+ * Registreert alle vaste event-handlers van het scherm. Wordt één keer aangeroepen, vóór
+ * het laden van de set, zodat de editor ook werkt na een link-fout (A1, ronde 2): de
+ * knoppen "Nieuwe zin", "Terug naar start", het naam-veld, de link-knoppen enz. moeten
+ * allemaal al werken zodra de leerkracht op "Beginnen met de standaardzinnen" klikt.
+ */
+function koppelHandlers() {
   $('knop-linkfout-beginnen').addEventListener('click', () => {
     huidigeSet = kopieerSet(beginset);
     gewijzigd = false;
@@ -358,29 +362,6 @@ async function init() {
     renderLijst();
     $('titel').focus();
   });
-
-  let resultaat;
-  try {
-    resultaat = await laadVoorLeerkracht(location.hash, sessionStorage, beginset);
-  } catch (fout) {
-    // Een kapotte/afgekapte link (of een browser zonder DecompressionStream): laat de
-    // normale editor-inhoud dicht en toon dezelfde melding als op het leerlingscherm,
-    // zonder sessionStorage aan te raken (finding: leerkracht.js crashte hier voorheen).
-    const oud = fout instanceof LinkFout && fout.code === 'OUD';
-    $('linkfout-bericht').textContent = oud
-      ? 'Deze browser is te oud voor deze link. Werk de browser bij of gebruik een Chromebook of computer.'
-      : 'Deze link is niet compleet of beschadigd. Open de link opnieuw via de startpagina. Werkt het dan nog niet? Vraag je juf of meester om een nieuwe link.';
-    $('scherm-linkfout').hidden = false;
-    $('leerkracht-inhoud').hidden = true;
-    $('linkfout-titel').focus();
-    return;
-  }
-  huidigeSet = resultaat.set;
-  gewijzigd = resultaat.gewijzigd;
-  bron = resultaat.bron ?? (haalFragmentUitHash(location.hash) ?? '');
-
-  renderMeldingen();
-  renderLijst();
 
   document.querySelectorAll('input[name="filter-niveau"]').forEach((input) => {
     input.addEventListener('change', () => {
@@ -462,6 +443,34 @@ async function init() {
       e.returnValue = '';
     }
   });
+}
+
+async function init() {
+  $('versie-tekst').textContent = VERSIE;
+  koppelHandlers();
+
+  let resultaat;
+  try {
+    resultaat = await laadVoorLeerkracht(location.hash, sessionStorage, beginset);
+  } catch (fout) {
+    // Een kapotte/afgekapte link (of een browser zonder DecompressionStream): laat de
+    // normale editor-inhoud dicht en toon dezelfde melding als op het leerlingscherm,
+    // zonder sessionStorage aan te raken (finding: leerkracht.js crashte hier voorheen).
+    const oud = fout instanceof LinkFout && fout.code === 'OUD';
+    $('linkfout-bericht').textContent = oud
+      ? 'Deze browser is te oud voor deze link. Werk de browser bij of gebruik een Chromebook of computer.'
+      : 'Deze link is niet compleet of beschadigd. Open de link opnieuw via de startpagina. Werkt het dan nog niet? Vraag een collega om een nieuwe link.';
+    $('scherm-linkfout').hidden = false;
+    $('leerkracht-inhoud').hidden = true;
+    $('linkfout-titel').focus();
+    return;
+  }
+  huidigeSet = resultaat.set;
+  gewijzigd = resultaat.gewijzigd;
+  bron = resultaat.bron ?? (haalFragmentUitHash(location.hash) ?? '');
+
+  renderMeldingen();
+  renderLijst();
 }
 
 init();
