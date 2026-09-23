@@ -143,6 +143,7 @@ main { padding: 1.25rem; max-width: 900px; margin: 0 auto; }
 .knop--groen { background: var(--kleur-groen); }
 .knop--outline {
   background: transparent;
+  color: var(--kleur-blauw);
   border-color: currentColor;
 }
 .knop--outline.op-blauw { color: #fff; border-color: #fff; }
@@ -195,16 +196,18 @@ main { padding: 1.25rem; max-width: 900px; margin: 0 auto; }
   display: block;
   border: 2px solid var(--kleur-rand);
   border-radius: var(--straal);
-  padding: 0.9rem;
+  padding: 0.9rem 0.9rem 0.9rem 2.4rem;
   cursor: pointer;
   background: #fff;
   min-height: 44px;
 }
+.keuze-kaart--dier { padding: 1.1rem 0.9rem 0.9rem; }
 .keuze-kaart input {
   position: absolute;
-  top: 0.75rem; left: 0.75rem;
+  top: 0.9rem; left: 0.9rem;
   width: 1.2rem; height: 1.2rem;
 }
+.keuze-kaart--dier input { top: 0.75rem; }
 .keuze-kaart:has(input:checked) {
   border-color: var(--kleur-groen);
   background: var(--kleur-groen-achtergrond);
@@ -401,6 +404,7 @@ mark.signaalwoord-markering {
 .resultaat-score-label { color: var(--kleur-tekst-grijs); font-size: 0.85rem; }
 
 .score-lijst { margin: 0; }
+.score-lijst dt, .score-lijst dd { margin: 0; }
 .score-rij {
   display: grid;
   grid-template-columns: 9rem 1fr 4rem;
@@ -411,8 +415,8 @@ mark.signaalwoord-markering {
 }
 .score-rij:last-child { border-bottom: none; }
 .score-naam { margin: 0; font-weight: 600; }
-.score-balk-omhulsel { background: #e5e7eb; border-radius: 999px; height: 14px; overflow: hidden; }
-.score-balk { height: 100%; width: 0%; }
+.score-balk-omhulsel { display: block; background: #e5e7eb; border-radius: 999px; height: 14px; overflow: hidden; }
+.score-balk { display: block; height: 100%; width: 0%; }
 .score-balk.niveau-100 { background: var(--kleur-groen); }
 .score-balk.niveau-50 { background: #e0a800; }
 .score-balk.niveau-laag { background: var(--kleur-oranje); }
