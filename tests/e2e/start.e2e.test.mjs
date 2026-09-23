@@ -101,9 +101,18 @@ test('AC6: een afgekapte link toont de foutmelding zonder wit scherm of fout', a
   const urlVoor = page.url();
   await page.click('#knop-standaardzinnen');
   await page.waitForTimeout(100);
-  assert.equal(await page.textContent('#info-regel'), (await page.textContent('#info-regel')));
   assert.match(await page.textContent('#info-regel'), /^Zinnen: Beginset/);
   assert.equal(page.url(), urlVoor, 'de URL mag niet veranderen');
+
+  // Regressietest: na een linkfout + "Oefenen met de standaardzinnen" moet "Begin de
+  // oefening" ook echt een ronde starten (eerder bleef het formulier onbeantwoord omdat
+  // de submit-listener nooit geregistreerd werd na een linkfout).
+  await page.click('#dieren-rooster label:has-text("Beer")');
+  await page.click('#niveau-rooster label:has-text("Basis")');
+  await page.click('#knop-beginnen');
+  await page.waitForSelector('#scherm-oefenen:not([hidden])');
+  assert.match(await page.textContent('#oefen-status-zin'), /^Zin 1 van/);
+
   assert.equal(fouten.length, 0, fouten.join('\n'));
   await afbreken(ctx);
 });

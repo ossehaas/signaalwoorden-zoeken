@@ -1,8 +1,8 @@
 // Leerkracht-scherm: zinnen beheren. De werkkopie leeft alleen in sessionStorage van dit
 // tabblad; de link (na "#") is het echte exemplaar. Zie privacy.md en PLAN.md §3.4.
 import { ALLE_SOORTCODES, BASIS_SOORTCODES, vindSoort } from './soorten.js';
-import { laadVoorLeerkracht, bewaarWerkkopie } from './set.js';
-import { maakKlaslink, versleutelFragment, haalFragmentUitHash } from './codec.js';
+import { laadVoorLeerkracht, bewaarWerkkopie, kopieerSet } from './set.js';
+import { maakKlaslink, versleutelFragment, haalFragmentUitHash, LinkFout } from './codec.js';
 import { formatteerDatum, vandaagIso } from './datum.js';
 import {
   tokenize, parseMarker, naarOpgeslagenTekst, markNaarOpgeslagenTekst, markNaTekstwijziging,
@@ -21,6 +21,11 @@ let bewerkIndex = null; // null = nieuwe zin, anders index in huidigeSet.zinnen
 let formTokens = [];
 let formMark = null; // {start, eind} in tokenindices, of null
 let navigeertIntern = false;
+// Staat de tekst in #link-veld nog garant voor de huidige (opgeslagen) zinnen? Wordt
+// true na "Link bijwerken"/"Kopieer nieuwe link" en weer false bij elke nieuwe wijziging,
+// zodat een Ctrl+C in een verouderd veld nooit stilletjes als "gekopieerd" telt (haar
+// grootste zorg: een kopie die de laatste wijziging mist).
+let linkIsActueel = false;
 
 function opslaan() {
   bewaarWerkkopie(sessionStorage, bron, huidigeSet, gewijzigd);
@@ -29,6 +34,7 @@ function opslaan() {
 function meldWijziging() {
   huidigeSet.datum = vandaagIso();
   gewijzigd = true;
+  linkIsActueel = false;
   opslaan();
   renderMeldingen();
   renderLijst();
@@ -39,7 +45,11 @@ function meldWijziging() {
 function renderMeldingen() {
   $('gewijzigd-melding').hidden = !gewijzigd;
   $('gekopieerd-melding').hidden = true;
-  if (!gewijzigd) $('link-veld').hidden = true;
+  if (!linkIsActueel) {
+    $('link-veld').hidden = true;
+    $('link-veld').value = '';
+    $('link-lang-melding').hidden = true;
+  }
 }
 
 async function bouwEnToonLink() {
@@ -50,11 +60,14 @@ async function bouwEnToonLink() {
   const fragment = await versleutelFragment(huidigeSet);
   history.replaceState(null, '', `#z=${fragment}`);
   bron = fragment;
+  linkIsActueel = true;
   opslaan();
+  $('link-lang-melding').hidden = link.length <= 16000;
   return link;
 }
 
 function toonGekopieerd() {
+  if (!linkIsActueel) return; // veld toont een oudere link dan de huidige zinnen: geen "gekopieerd"
   gewijzigd = false;
   opslaan();
   $('gewijzigd-melding').hidden = true;
@@ -78,6 +91,10 @@ function renderLijst() {
     .map((z, i) => ({ zin: z, index: i }))
     .filter((x) => x.zin.niveau === filterNiveau);
   $('zin-aantal').textContent = `${gefilterd.length} ${gefilterd.length === 1 ? 'zin' : 'zinnen'}`;
+
+  const aanMax = huidigeSet.zinnen.length >= 300;
+  $('knop-nieuwe-zin').disabled = aanMax;
+  $('max-zinnen-fout').hidden = !aanMax;
 
   const lijst = $('zinnen-lijst');
   lijst.replaceChildren();
@@ -108,6 +125,7 @@ function renderLijst() {
     wijzigKnop.type = 'button';
     wijzigKnop.className = 'knop knop--outline knop--klein';
     wijzigKnop.textContent = 'Wijzig';
+    wijzigKnop.dataset.rijIndex = String(index);
     wijzigKnop.addEventListener('click', () => openBewerkForm(index));
     acties.append(badge, wijzigKnop);
 
@@ -207,6 +225,13 @@ function verbergFormFouten() {
     $(id).textContent = '';
   }
   $('zin-tekst').removeAttribute('aria-invalid');
+  $('soort-veld').removeAttribute('aria-invalid');
+}
+
+/** Focus na opslaan/verwijderen: naar de rij die net bewerkt is, anders naar "Nieuwe zin". */
+function focusNaOpslaan(index) {
+  const rijKnop = index === null ? null : document.querySelector(`[data-rij-index="${index}"]`);
+  (rijKnop ?? $('knop-nieuwe-zin')).focus();
 }
 
 function toonFormFout(veldId, foutId, bericht) {
@@ -242,15 +267,23 @@ function slaZinOp(e) {
     toonFormFout('zin-tekst', 'zin-tekst-fout', 'De zin is te lang (max. 400 tekens).');
     return;
   }
+  if (bewerkIndex === null && huidigeSet.zinnen.length >= 300) {
+    toonFormFout('zin-tekst', 'zin-tekst-fout', 'Deze set heeft het maximum van 300 zinnen bereikt.');
+    return;
+  }
 
   const nieuweZin = { niveau, soort, tekst: opgeslagenTekst };
+  let opgeslagenIndex;
   if (bewerkIndex === null) {
     huidigeSet.zinnen.push(nieuweZin);
+    opgeslagenIndex = huidigeSet.zinnen.length - 1;
   } else {
     huidigeSet.zinnen[bewerkIndex] = nieuweZin;
+    opgeslagenIndex = bewerkIndex;
   }
   sluitForm();
   meldWijziging();
+  focusNaOpslaan(niveau === filterNiveau ? opgeslagenIndex : null);
 }
 
 function verwijderZin() {
@@ -261,6 +294,7 @@ function verwijderZin() {
   huidigeSet.zinnen.splice(bewerkIndex, 1);
   sluitForm();
   meldWijziging();
+  focusNaOpslaan(null);
 }
 
 // ---------- Extra: opslaan als bestand ----------
@@ -292,7 +326,15 @@ ${regels}
   document.body.append(a);
   a.click();
   a.remove();
-  URL.revokeObjectURL(url);
+  // Pas laat vrijgeven: te vroeg revoken kan de download in sommige browsers afbreken.
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+/** Toont een fout uit een link-/downloadactie in plaats van een stille afwijzing. */
+function toonActieFout(fout) {
+  const el = $('actie-fout');
+  el.textContent = `Er ging iets mis: ${fout?.message ?? fout}. Probeer het opnieuw.`;
+  el.hidden = false;
 }
 
 function escapeHtml(tekst) {
@@ -304,7 +346,35 @@ function escapeHtml(tekst) {
 async function init() {
   $('versie-tekst').textContent = VERSIE;
 
-  const resultaat = await laadVoorLeerkracht(location.hash, sessionStorage, beginset);
+  $('knop-linkfout-beginnen').addEventListener('click', () => {
+    huidigeSet = kopieerSet(beginset);
+    gewijzigd = false;
+    bron = '';
+    linkIsActueel = false;
+    history.replaceState(null, '', location.pathname + location.search);
+    $('scherm-linkfout').hidden = true;
+    $('leerkracht-inhoud').hidden = false;
+    renderMeldingen();
+    renderLijst();
+    $('titel').focus();
+  });
+
+  let resultaat;
+  try {
+    resultaat = await laadVoorLeerkracht(location.hash, sessionStorage, beginset);
+  } catch (fout) {
+    // Een kapotte/afgekapte link (of een browser zonder DecompressionStream): laat de
+    // normale editor-inhoud dicht en toon dezelfde melding als op het leerlingscherm,
+    // zonder sessionStorage aan te raken (finding: leerkracht.js crashte hier voorheen).
+    const oud = fout instanceof LinkFout && fout.code === 'OUD';
+    $('linkfout-bericht').textContent = oud
+      ? 'Deze browser is te oud voor deze link. Werk de browser bij of gebruik een Chromebook of computer.'
+      : 'Deze link is niet compleet of beschadigd. Open de link opnieuw via de startpagina. Werkt het dan nog niet? Vraag je juf of meester om een nieuwe link.';
+    $('scherm-linkfout').hidden = false;
+    $('leerkracht-inhoud').hidden = true;
+    $('linkfout-titel').focus();
+    return;
+  }
   huidigeSet = resultaat.set;
   gewijzigd = resultaat.gewijzigd;
   bron = resultaat.bron ?? (haalFragmentUitHash(location.hash) ?? '');
@@ -341,9 +411,23 @@ async function init() {
     renderMarkeerWoorden();
   });
 
-  $('knop-link-bijwerken').addEventListener('click', () => { bouwEnToonLink(); });
+  $('knop-link-bijwerken').addEventListener('click', async () => {
+    try {
+      $('actie-fout').hidden = true;
+      await bouwEnToonLink();
+    } catch (fout) {
+      toonActieFout(fout);
+    }
+  });
   $('knop-link-kopieren').addEventListener('click', async () => {
-    const link = await bouwEnToonLink();
+    $('actie-fout').hidden = true;
+    let link;
+    try {
+      link = await bouwEnToonLink();
+    } catch (fout) {
+      toonActieFout(fout);
+      return;
+    }
     try {
       await navigator.clipboard.writeText(link);
       toonGekopieerd();
@@ -357,7 +441,15 @@ async function init() {
   });
   $('link-veld').addEventListener('copy', () => { toonGekopieerd(); });
 
-  $('knop-opslaan-bestand').addEventListener('click', (e) => { e.preventDefault(); downloadBestand(); });
+  $('knop-opslaan-bestand').addEventListener('click', async (e) => {
+    e.preventDefault();
+    try {
+      $('actie-fout').hidden = true;
+      await downloadBestand();
+    } catch (fout) {
+      toonActieFout(fout);
+    }
+  });
 
   $('knop-terug').addEventListener('click', () => {
     navigeertIntern = true;

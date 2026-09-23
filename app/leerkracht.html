@@ -16,6 +16,15 @@
 </header>
 
 <main id="hoofd">
+  <section id="scherm-linkfout" hidden aria-labelledby="linkfout-titel">
+    <div class="paneel">
+      <h1 id="linkfout-titel" tabindex="-1">Deze link is niet compleet of beschadigd</h1>
+      <p id="linkfout-bericht">Open de link opnieuw via de startpagina. Werkt het dan nog niet? Vraag je juf of meester om een nieuwe link.</p>
+      <button type="button" id="knop-linkfout-beginnen" class="knop knop--groen">Beginnen met de standaardzinnen</button>
+    </div>
+  </section>
+
+  <div id="leerkracht-inhoud">
   <div class="leerkracht-kop">
     <h1 id="titel" tabindex="-1">Zinnen beheren</h1>
     <div class="segment" id="niveau-segment">
@@ -35,6 +44,7 @@
       </div>
       <label for="link-veld" class="sr-only">De klaslink</label>
       <input type="text" id="link-veld" class="link-veld" readonly hidden>
+      <p class="melding-sub" id="link-lang-melding" hidden>De link wordt erg lang. Sommige startpagina's kunnen dat niet aan.</p>
     </div>
   </div>
 
@@ -42,6 +52,8 @@
     <svg aria-hidden="true" viewBox="0 0 24 24" width="24" height="24"><circle cx="12" cy="12" r="11" fill="#1a7a51"/><path d="M7 12l3.2 3.2L17 8.5" stroke="#fff" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
     <p class="melding-titel">Gekopieerd. Zet deze link nu op de startpagina.</p>
   </div>
+
+  <p id="actie-fout" class="veld-fout" role="alert" hidden></p>
 
   <p class="help-tekst">Je zinnen staan in de link op de startpagina. Open die link op elke computer om verder te werken.</p>
 
@@ -67,13 +79,14 @@
       <span class="zin-aantal" id="zin-aantal"></span>
     </div>
     <button type="button" id="knop-nieuwe-zin" class="knop knop--outline nieuwe-zin-knop">Nieuwe zin</button>
+    <p class="veld-fout" id="max-zinnen-fout" hidden>Deze set heeft het maximum van 300 zinnen bereikt. Verwijder eerst een zin om een nieuwe toe te voegen.</p>
     <ul class="zinnen-lijst" id="zinnen-lijst"></ul>
 
     <form class="zin-form" id="zin-form" hidden aria-labelledby="zin-form-titel">
       <h3 id="zin-form-titel">Nieuwe zin toevoegen</h3>
       <div class="veldgroep">
         <label for="zin-tekst">Zin</label>
-        <textarea id="zin-tekst" class="veld" rows="3" aria-describedby="zin-tekst-fout"></textarea>
+        <textarea id="zin-tekst" class="veld" rows="3" aria-describedby="zin-tekst-fout marker-fout"></textarea>
         <p class="veld-fout" id="zin-tekst-fout" hidden></p>
       </div>
       <div class="veldgroep">
@@ -104,6 +117,7 @@
   </div>
 
   <p class="extra-rij"><a href="#" id="knop-opslaan-bestand" class="knop--tekst">Extra: opslaan als bestand</a></p>
+  </div>
 </main>
 
 <footer class="app-footer"><p class="voetnoot">versie <span id="versie-tekst"></span></p></footer>

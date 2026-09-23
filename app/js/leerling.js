@@ -1,7 +1,9 @@
 // Leerling-schermen: Start, Oefenen, Resultaat. Alles staat hier alleen in JS-variabelen
 // (geen storage, geen URL-wijzigingen): zie privacy.md en PLAN.md §3.4.
 import { DIEREN } from './dieren.js';
-import { SOORTEN, ALLE_SOORTCODES, BASIS_SOORTCODES, LEXICON, vindSoort } from './soorten.js';
+import {
+  SOORTEN, ALLE_SOORTCODES, BASIS_SOORTCODES, vindSoort, vindTweedeSignaalwoord, SIGNAAL_PAREN, vindUitleg,
+} from './soorten.js';
 import { laadVoorLeerling } from './set.js';
 import { LinkFout } from './codec.js';
 import { formatteerDatum } from './datum.js';
@@ -209,19 +211,6 @@ function bijgewerkteVoortgang() {
 
 const VORM_LABEL = { aanwijzen: 'Aanwijzen', soort: 'Soort kiezen', invullen: 'Invullen' };
 
-function vindTweedeSterkeSignaalwoord(zin) {
-  const { voor, woord, na } = parseMarker(zin.tekst);
-  const buiten = `${voor} ${na}`;
-  for (const item of LEXICON) {
-    if (item.zwak) continue;
-    if (item.woord.toLowerCase() === woord.toLowerCase()) continue;
-    const escaped = item.woord.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const regex = new RegExp(`(^|[^\\p{L}\\p{N}])${escaped}([^\\p{L}\\p{N}]|$)`, 'iu');
-    if (regex.test(buiten)) return item;
-  }
-  return null;
-}
-
 function renderHuidigeZin() {
   ronde.beantwoord = false;
   bijgewerkteVoortgang();
@@ -253,7 +242,19 @@ function renderAanwijzen(zin) {
   const markTokenIdxen = [];
   tokens.forEach((t, i) => { if (t.isWoord && t.start >= markStartChar && t.eind <= markEindChar) markTokenIdxen.push(i); });
 
-  const tweedeWoord = vindTweedeSterkeSignaalwoord(zin);
+  // Ook een gepaard woord (bijv. "ook" bij "niet alleen") telt als een correct antwoord,
+  // en telt niet mee als "tweede signaalwoord" dat de instructie zou omzetten.
+  const gepaardWoord = SIGNAAL_PAREN[woord.toLowerCase()] ?? null;
+  const gepaardTokenIdxen = [];
+  if (gepaardWoord) {
+    tokens.forEach((t, i) => {
+      if (t.isWoord && !markTokenIdxen.includes(i) && t.tekst.toLowerCase() === gepaardWoord) gepaardTokenIdxen.push(i);
+    });
+  }
+
+  // Elk ander signaalwoord (ook een zwak woord zoals "ook", "als" of "dan") buiten de
+  // marker maakt "Klik op het signaalwoord in de zin" dubbelzinnig; toon dan het soort.
+  const tweedeWoord = vindTweedeSignaalwoord(zin);
   const soort = vindSoort(zin.soort);
   $('instructie-tekst').textContent = tweedeWoord
     ? `Klik op het signaalwoord voor: ${soort.label.toLowerCase()}`
@@ -289,15 +290,16 @@ function renderAanwijzen(zin) {
     const isBinnenMark = markTokenIdxen.includes(geklikteIndex);
     const isGelijkEenwoordig = markTokenIdxen.length === 1
       && tokens[geklikteIndex].tekst.toLowerCase() === woord.toLowerCase();
-    const correct = isBinnenMark || isGelijkEenwoordig;
+    const isGepaardWoord = gepaardTokenIdxen.includes(geklikteIndex);
+    const correct = isBinnenMark || isGelijkEenwoordig || isGepaardWoord;
     ronde.beantwoord = true;
-    // markeer de juiste frase groen en schakel alle woordknoppen uit
+    // markeer de juiste frase (en een eventueel gepaard woord) groen, schakel alle woordknoppen uit
     let woordTeller = -1;
     tokens.forEach((token, i) => {
       if (!token.isWoord) return;
       woordTeller++;
       const btn = woordButtons[woordTeller];
-      if (markTokenIdxen.includes(i)) btn.classList.add('is-goed');
+      if (markTokenIdxen.includes(i) || gepaardTokenIdxen.includes(i)) btn.classList.add('is-goed');
       btn.disabled = true;
       btn.tabIndex = -1;
     });
@@ -455,10 +457,11 @@ function toonFeedback(correct, zin, woord, soort) {
   titel.textContent = correct ? 'Goed zo!' : 'Helaas.';
   const tekst = document.createElement('p');
   tekst.className = 'feedback-tekst';
+  const uitleg = vindUitleg(woord, soort);
   if (correct) {
-    tekst.textContent = `"${woord}" ${soort.uitleg}. Dat is een signaalwoord voor ${soort.label.toLowerCase()}.`;
+    tekst.textContent = `"${woord}" ${uitleg}. Dat is een signaalwoord voor ${soort.label.toLowerCase()}.`;
   } else {
-    tekst.textContent = `Het goede antwoord is ${soort.label.toLowerCase()} ("${woord}"). "${woord}" ${soort.uitleg}.`;
+    tekst.textContent = `Het goede antwoord is ${soort.label.toLowerCase()} ("${woord}"). "${woord}" ${uitleg}.`;
   }
   tekstWrap.append(titel, tekst);
   paneel.append(tekstWrap);
@@ -495,9 +498,13 @@ function toonResultaat() {
 
   const dier = DIEREN.find((d) => d.id === ronde.dier);
   $('resultaat-dier-svg').innerHTML = dier.svg; // statisch-html: vaste dier-SVG uit dieren.js
-  $('resultaat-titel').textContent = `Goed gedaan, ${dier.naam}!`;
-  $('resultaat-sub').textContent = `Niveau ${ronde.niveau === 'B' ? 'Basis' : 'Cito'} — ${VORM_LABEL[ronde.vorm]} — ${ronde.zinnen.length} zinnen`;
   const goed = totaalGoed(ronde.score);
+  const aandeel = goed / ronde.zinnen.length;
+  // Toon (per §C1): bij een laag aantal goed is "Goed gedaan!" de verkeerde toon. De
+  // begroeting is altijd vriendelijk, maar past zich aan het resultaat aan.
+  const begroeting = aandeel >= 0.8 ? 'Goed gedaan' : aandeel >= 0.5 ? 'Mooi gewerkt' : 'Goed geprobeerd';
+  $('resultaat-titel').textContent = `${begroeting}, ${dier.naam}!`;
+  $('resultaat-sub').textContent = `Niveau ${ronde.niveau === 'B' ? 'Basis' : 'Cito'} — ${VORM_LABEL[ronde.vorm]} — ${ronde.zinnen.length} zinnen`;
   $('resultaat-score-getal').textContent = `${goed}/${ronde.zinnen.length}`;
 
   const lijst = $('score-lijst');
@@ -546,6 +553,10 @@ function nieuweRonde() {
   gekozenNiveau = null;
   gekozenVorm = 'soort';
   wisResultaatDom();
+  // Op het linkfout-scherm is er geen set om een start-scherm mee op te bouwen: niets
+  // te doen (er is dan ook geen resultaat om te verbergen). Voorkomt een TypeError bij
+  // pagehide/pageshow (bfcache) terwijl het linkfout-scherm zichtbaar is.
+  if (!huidigeSet) return;
   renderStartScherm();
   toonScherm('scherm-start');
 }
@@ -577,6 +588,14 @@ async function init() {
     renderInfoRegel();
     nieuweRonde();
   });
+  // Altijd registreren, vóór de laadFout-check hieronder: anders doet de knop
+  // "Begin de oefening" niets na een linkfout + "Oefenen met de standaardzinnen",
+  // en valt het formulier terug op een normale (CSP-geblokkeerde) GET-submit.
+  $('start-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    if (!gekozenDier || !gekozenNiveau) return;
+    startRonde();
+  });
 
   const resultaat = await laadVoorLeerling(location.hash, beginset);
   huidigeSet = resultaat.set;
@@ -589,14 +608,11 @@ async function init() {
       ? 'Deze browser is te oud voor deze link. Werk de browser bij of gebruik een Chromebook of computer.'
       : 'Deze link is niet compleet of beschadigd. Open de link opnieuw via de startpagina. Werkt het dan nog niet? Vraag je juf of meester om een nieuwe link.';
     toonScherm('scherm-linkfout');
+    // De link (in location.hash) is kapot: naar Zinnen beheren gaan zou daar dezelfde
+    // fout opleveren. Verberg de knop hier, in plaats van dat scherm ook te moeten fixen.
+    $('knop-leerkracht').hidden = true;
     return;
   }
-
-  $('start-form').addEventListener('submit', (e) => {
-    e.preventDefault();
-    if (!gekozenDier || !gekozenNiveau) return;
-    startRonde();
-  });
 
   renderStartScherm();
   toonScherm('scherm-start');

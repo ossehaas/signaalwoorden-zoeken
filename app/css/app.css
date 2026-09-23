@@ -49,12 +49,21 @@ button, input, select, textarea { font: inherit; color: inherit; }
   border: 0;
 }
 
-/* Focus: altijd zichtbaar, nooit weggehaald */
+/* Focus: altijd zichtbaar, nooit weggehaald. Een echte "outline" (niet alleen
+   box-shadow) is nodig zodat de ring ook zichtbaar blijft in forced-colors-modus
+   (Windows hoog-contrast), waar box-shadow genegeerd wordt. */
 a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible,
-textarea:focus-visible, [tabindex]:focus-visible {
-  outline: none;
-  box-shadow: var(--focus-ring);
+textarea:focus-visible, .zin-woord:focus-visible, .markeer-woord:focus-visible {
+  outline: 3px solid var(--kleur-blauw-donker);
+  outline-offset: 2px;
   border-radius: 6px;
+}
+
+/* De schermtitel (h1) krijgt na elke schermwissel programmatisch focus (tabindex="-1"),
+   puur zodat schermlezers de nieuwe kop aankondigen. Zichtbare gebruikers zien de nieuwe
+   kop al staan; een ring die bij elke wissel oplicht is dan alleen maar verwarrend. */
+h1[tabindex="-1"]:focus-visible {
+  outline: none;
 }
 
 /* ---------- Header ---------- */
@@ -196,7 +205,7 @@ main { padding: 1.25rem; max-width: 900px; margin: 0 auto; }
   display: block;
   border: 2px solid var(--kleur-rand);
   border-radius: var(--straal);
-  padding: 0.9rem 0.9rem 0.9rem 2.4rem;
+  padding: 0.9rem 0.9rem 0.9rem 2.9rem;
   cursor: pointer;
   background: #fff;
   min-height: 44px;
@@ -297,6 +306,11 @@ main { padding: 1.25rem; max-width: 900px; margin: 0 auto; }
   cursor: pointer;
   font: inherit;
   color: inherit;
+  /* inline-block + min-width zodat korte woorden ("de", "u") toch een aanraakdoel van
+     minstens 44px breed zijn; de regelhoogte (1.6) zorgt al voor voldoende hoogte. */
+  display: inline-block;
+  min-width: 44px;
+  text-align: center;
 }
 .zin-woord:hover { background: #e2e8f0; }
 .zin-woord.is-goed { background: var(--kleur-groen-achtergrond); color: var(--kleur-groen); font-weight: 700; }
@@ -519,7 +533,8 @@ mark.signaalwoord-markering {
   border-radius: 6px;
   padding: 0.3rem 0.5rem;
   cursor: pointer;
-  min-height: 36px;
+  min-height: 44px;
+  min-width: 44px;
 }
 .markeer-woord.is-gemarkeerd { background: #dbeafe; border-color: var(--kleur-blauw); font-weight: 700; }
 

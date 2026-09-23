@@ -4,6 +4,8 @@
 //   node tools/link.mjs                          → codeert app/data/beginset.js, print de link + lengte
 //   node tools/link.mjs --set pad/naar/set.json   → codeert een ander set-bestand (JSON)
 //   node tools/link.mjs --decode "<link-of-fragment>"   → print de gedecodeerde set als JSON
+//   node tools/link.mjs --decode "<link>" --module      → print een geldige app/data/beginset.js
+//                                                          ("export default {...};" i.p.v. kale JSON)
 //   node tools/link.mjs --opties                  → print voor elke beginset-zin de Invullen-opties
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
@@ -41,7 +43,12 @@ async function main() {
       fragment = decodeerArg.startsWith('z=') ? decodeerArg.slice(2) : decodeerArg;
     }
     const set = await ontsleutelFragment(fragment);
-    console.log(JSON.stringify(set, null, 2));
+    if (process.argv.includes('--module')) {
+      // Geldige ES-module, klaar om als app/data/beginset.js weg te schrijven (zie HULP.md).
+      console.log(`// Gegenereerd met "node tools/link.mjs --decode ... --module".\nexport default ${JSON.stringify(set, null, 2)};\n`);
+    } else {
+      console.log(JSON.stringify(set, null, 2));
+    }
     return;
   }
 

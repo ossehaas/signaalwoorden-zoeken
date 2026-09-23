@@ -28,8 +28,12 @@ Voor leerkrachten en school-ICT.
 
 ## "Deze link is niet compleet" / de link werkt niet / de link is te lang
 
-- De link is waarschijnlijk afgekapt bij het kopiëren of plakken. Ga naar "Leerkracht" en
-  klik opnieuw op "Kopieer nieuwe link".
+- De link is waarschijnlijk afgekapt bij het kopiëren of plakken. Zoek de laatst
+  gekopieerde, volledige link op (bijvoorbeeld het bestand van "Extra: opslaan als
+  bestand", of de link die eerder werkte op de startpagina) en kopieer die opnieuw vanaf
+  het begin — een kapotte/afgekapte link kan zichzelf niet herstellen. Heb je toegang tot
+  het leerkrachtscherm met de juiste (nog werkende) link, dan kun je daar ook gewoon
+  opnieuw op "Kopieer nieuwe link" klikken.
 - Controleer of de startpagina de hele link heeft opgeslagen (sommige tekstvelden knippen
   lange tekst af).
 - Kan de startpagina geen lange link aan? Gebruik dan iets minder zinnen, zet de link in een
@@ -63,9 +67,12 @@ Dat is niet erg: er verandert niets voor andere kinderen. Sluit gewoon het tabbl
   of -map. Er is geen database en geen servercode nodig.
 - Bestaande klaslinks blijven werken: vervang alleen het deel vóór het `#`-teken door het
   nieuwe adres.
-- Wil je een klaslink als nieuwe standaard-beginset instellen? Gebruik:
-  `npm run link -- --decode "<link>" > app/data/beginset.js`
-  (of vraag het je eigen AI-assistent, zie hieronder).
+- Wil je een klaslink als nieuwe standaard-beginset instellen? Gebruik (rechtstreeks met
+  `node`, niet via `npm run`, anders komt npm's eigen tekst tussen de uitvoer):
+  `node tools/link.mjs --decode "<link>" --module > app/data/beginset.js`
+  Verhoog daarna `VERSIE` in `app/js/versie.js` én `app/sw.js` (zelfde tekst, beide
+  plekken), zodat gebruikers de nieuwe beginset ook echt krijgen. (Of vraag het je eigen
+  AI-assistent, zie hieronder.)
 
 ## Vraag voor je eigen AI
 

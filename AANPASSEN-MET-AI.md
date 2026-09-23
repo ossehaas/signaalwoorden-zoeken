@@ -50,13 +50,13 @@ Open dan `http://localhost:4173/tools/signaalwoorden-zoeken/app/` en loop dit li
    mag alleen op de leerkrachtpagina één sleutel bevatten, en er mogen geen cookies staan.
 5. Zet in de Developer Tools → Network de optie "Offline" aan, en herlaad: de app moet
    blijven werken.
-6. Open `handleiding.html` en klik op "Printen": de printvoorbeeld moet op één A4 passen.
+6. Open `handleiding.html` en klik op "Printen": het afdrukvoorbeeld moet op één A4 passen.
 
 ## 6. Online zetten
 
-Kopieer de map `app/` naar de webserver van de school (zie `HULP.md`). Verhoog daarna het
-versienummer in `app/js/versie.js` én in `app/sw.js` (dezelfde tekst op beide plekken),
-zodat bezoekers de nieuwe versie krijgen in plaats van een oude, gecachete versie.
+Verhoog **eerst** het versienummer in `app/js/versie.js` én in `app/sw.js` (dezelfde tekst
+op beide plekken) — anders krijgen bezoekers via de oude cache alsnog de oude versie te
+zien. Kopieer daarna de map `app/` naar de webserver van de school (zie `HULP.md`).
 
 ## 7. Wat je beter niet verandert
 

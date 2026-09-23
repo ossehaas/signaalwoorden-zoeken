@@ -101,11 +101,51 @@ test('AC18: kaart en scorelijst tonen de juiste onderdelen', async () => {
     await page.click('#knop-volgende');
   }
   await page.waitForSelector('#scherm-resultaat:not([hidden])');
-  assert.equal(await page.textContent('#resultaat-titel'), 'Goed gedaan, Beer!');
+  // 3 van de 6 goed (steeds "Oorzaak-gevolg" klikken: raak voor de 3 og-zinnen, mis voor
+  // de 3 te-zinnen) = 50%, wat volgens de score-afhankelijke begroeting (C1) "Mooi
+  // gewerkt" oplevert, niet het te opgewekte "Goed gedaan" bij een lage score.
+  assert.equal(await page.textContent('#resultaat-titel'), 'Mooi gewerkt, Beer!');
   assert.equal(await page.textContent('#resultaat-sub'), 'Niveau Cito — Soort kiezen — 6 zinnen');
   assert.match(await page.textContent('#resultaat-score-getal'), /^\d\/6$/);
   const rijen = await page.locator('.score-rij').count();
   assert.ok(rijen === 2, `verwacht 2 rijen (og, te), kreeg ${rijen}`);
+  await afbreken(ctx);
+});
+
+test('C1: een lage score toont een bemoedigende, geen te opgewekte, begroeting', async () => {
+  const ctx = await opzetten();
+  const link = await bouwLink(ctx.basisUrl, GERICHTE_SET);
+  const page = await ctx.context.newPage();
+  await page.goto(link, { waitUntil: 'networkidle' });
+  await page.click('#dieren-rooster label:has-text("Schildpad")');
+  await page.click('#niveau-rooster label:has-text("Cito")');
+  await page.click('#vorm-rooster label:has-text("Soort kiezen")');
+  await page.click('#knop-beginnen');
+  await page.waitForSelector('#scherm-oefenen:not([hidden])');
+  await beantwoordSoortKiezen(page, { aantal: 6 }); // altijd "Opsomming": 0/6 goed
+  await page.waitForSelector('#scherm-resultaat:not([hidden])');
+  assert.equal(await page.textContent('#resultaat-titel'), 'Goed geprobeerd, Schildpad!');
+  await afbreken(ctx);
+});
+
+test('C1: een volle score toont "Goed gedaan"', async () => {
+  const ctx = await opzetten();
+  const link = await bouwLink(ctx.basisUrl, GERICHTE_SET);
+  const page = await ctx.context.newPage();
+  await page.goto(link, { waitUntil: 'networkidle' });
+  await page.click('#dieren-rooster label:has-text("Vos")');
+  await page.click('#niveau-rooster label:has-text("Cito")');
+  await page.click('#vorm-rooster label:has-text("Soort kiezen")');
+  await page.click('#knop-beginnen');
+  await page.waitForSelector('#scherm-oefenen:not([hidden])');
+  for (let i = 0; i < 6; i++) {
+    const isOg = (await page.textContent('#zin-kaart')).includes('rivier') || (await page.textContent('#zin-kaart')).includes('verkeer') || (await page.textContent('#zin-kaart')).includes('planten');
+    await page.locator('.soort-knop', { hasText: isOg ? 'Oorzaak-gevolg' : 'Tegenstelling' }).click();
+    await page.waitForTimeout(30);
+    await page.click('#knop-volgende');
+  }
+  await page.waitForSelector('#scherm-resultaat:not([hidden])');
+  assert.equal(await page.textContent('#resultaat-titel'), 'Goed gedaan, Vos!');
   await afbreken(ctx);
 });
 

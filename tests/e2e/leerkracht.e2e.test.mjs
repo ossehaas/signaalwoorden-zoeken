@@ -1,10 +1,125 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { opzetten, afbreken, testSet, bouwLink } from './helpers.mjs';
+import { opzetten, afbreken, testSet, bouwLink, volgProbleem } from './helpers.mjs';
+import { ontsleutelFragment, haalFragmentUitHash } from '../../app/js/codec.js';
 
 async function metKlembord(ctx) {
   await ctx.context.grantPermissions(['clipboard-read', 'clipboard-write']);
 }
+
+test('regressie: een afgekapte link op leerkracht.html toont de foutmelding, geen crash', async () => {
+  const ctx = await opzetten();
+  const link = await bouwLink(ctx.basisUrl, testSet());
+  const volledigeHash = new URL(link).hash;
+  const afgekapteHash = volledigeHash.slice(0, Math.floor(volledigeHash.length * 0.6));
+  const page = await ctx.context.newPage();
+  const { fouten } = volgProbleem(page, ctx.basisUrl);
+  await page.goto(`${ctx.basisUrl}leerkracht.html${afgekapteHash}`, { waitUntil: 'networkidle' });
+  assert.ok(await page.isVisible('#scherm-linkfout'));
+  assert.match(await page.textContent('#linkfout-bericht'), /niet compleet of beschadigd/);
+  assert.ok(await page.isHidden('#leerkracht-inhoud'), 'de gewone editor-inhoud moet verborgen zijn');
+
+  await page.click('#knop-linkfout-beginnen');
+  assert.ok(await page.isVisible('#leerkracht-inhoud'));
+  assert.match(await page.textContent('#zin-aantal'), /^\d+ zin/);
+  assert.equal(fouten.length, 0, fouten.join('\n'));
+  await afbreken(ctx);
+});
+
+test('regressie: een stale link in #link-veld telt niet als "gekopieerd" (Ctrl+C na een nieuwe wijziging)', async () => {
+  const ctx = await opzetten();
+  const link = await bouwLink(ctx.basisUrl, testSet());
+  const page = await ctx.context.newPage();
+  await page.goto(`${ctx.basisUrl}leerkracht.html${new URL(link).hash}`, { waitUntil: 'networkidle' });
+
+  await page.fill('#naam-veld', 'Groep 7');
+  await page.click('#knop-link-bijwerken');
+  await page.waitForTimeout(100);
+  const oudeLink = await page.inputValue('#link-veld');
+  assert.match(oudeLink, /#z=1\./); // sanity: het veld toont een echte link
+  const oudeSet = await ontsleutelFragment(haalFragmentUitHash(new URL(oudeLink).hash));
+  assert.equal(oudeSet.naam, 'Groep 7');
+
+  // Nog een wijziging na "Link bijwerken": het veld moet verdwijnen (het is nu stale),
+  // en een Ctrl+C erin mag niet stilzwijgend als "gekopieerd" gelden.
+  await page.fill('#naam-veld', 'Groep 8 NIEUW');
+  assert.ok(await page.isHidden('#link-veld'), 'het verouderde link-veld moet verborgen worden na een nieuwe wijziging');
+
+  await page.evaluate(() => {
+    document.getElementById('link-veld').dispatchEvent(new Event('copy'));
+  });
+  await page.waitForTimeout(50);
+  assert.ok(await page.isVisible('#gewijzigd-melding'), 'de oranje melding moet blijven staan: er is niets actueels gekopieerd');
+  assert.ok(await page.isHidden('#gekopieerd-melding'));
+
+  // Een echte "Link bijwerken" ná de wijziging bevat wel de laatste naam (haar grootste
+  // zorg: dat een kopie de laatste wijziging mist).
+  await page.click('#knop-link-bijwerken');
+  await page.waitForTimeout(100);
+  const nieuweLink = await page.inputValue('#link-veld');
+  const nieuweSet = await ontsleutelFragment(haalFragmentUitHash(new URL(nieuweLink).hash));
+  assert.equal(nieuweSet.naam, 'Groep 8 NIEUW');
+  await afbreken(ctx);
+});
+
+// Zelfde laag-redundante generator als linklengte.test.mjs/link.e2e.test.mjs: een korte
+// cyclus ('x'.repeat-achtig) comprimeert te goed om de 16.000-grens betrouwbaar te halen.
+const LANGE_LINK_WOORDENPOEL = [
+  'appel', 'brug', 'citroen', 'dorp', 'emmer', 'fiets', 'gieter', 'haring', 'ijsje', 'jager',
+  'kajuit', 'lantaarn', 'mango', 'nectarine', 'oester', 'pinguin', 'quiz', 'raket', 'sinaasappel',
+  'tulband', 'ui', 'vlinder', 'wortel', 'xylofoon', 'yoghurt', 'zeepaardje', 'blauw', 'groen',
+  'geel', 'paars', 'oranje', 'zwart', 'grijs', 'bruin', 'roze', 'wit', 'snel', 'langzaam', 'hoog',
+  'laag', 'breed', 'smal', 'zwaar', 'licht', 'warm', 'koud', 'nat', 'droog', 'stil', 'luid',
+  'berg', 'rivier', 'zee', 'strand', 'bos', 'weide', 'akker', 'molen', 'toren', 'kasteel',
+  'haven', 'markt', 'plein', 'straat', 'steeg', 'tuin', 'park', 'school', 'winkel', 'station',
+  'trein', 'boot', 'vliegtuig', 'ballon', 'wagen', 'kar', 'slee', 'skateboard', 'step', 'kano',
+  'olifant', 'giraffe', 'zebra', 'leeuw', 'tijger', 'aap', 'beer', 'wolf', 'hert', 'egel',
+  'spin', 'bij', 'mier', 'vlieg', 'krab', 'kwal', 'inktvis', 'dolfijn', 'walvis', 'pinguïn',
+  'trommel', 'fluit', 'gitaar', 'piano', 'viool', 'trompet', 'harp', 'xylofoontje', 'drumstel', 'accordeon',
+  'bakker', 'slager', 'kapper', 'dokter', 'agent', 'piloot', 'kapitein', 'timmerman', 'schilder', 'tuinman',
+];
+function mulberry32(seed) {
+  let a = seed >>> 0;
+  return function () {
+    a |= 0; a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+function laagRedundanteTekst(seed, lengte) {
+  const rng = mulberry32(seed * 7919 + 13);
+  let tekst = '';
+  while (tekst.length < lengte) tekst += `${LANGE_LINK_WOORDENPOEL[Math.floor(rng() * LANGE_LINK_WOORDENPOEL.length)]} `;
+  return tekst.slice(0, lengte);
+}
+
+test('regressie: een erg lange link toont de waarschuwing boven 16.000 tekens', async () => {
+  const ctx = await opzetten();
+  // Elke zin op de editor-limiet van 400 tekens (codec.js MAX_ZIN_LENGTE), met
+  // laag-redundante tekst: dezelfde aanpak als tests/unit/linklengte.test.mjs gaf daar
+  // betrouwbaar >15.000 tekens voor 110 zinnen, dus 110 zinnen hier ook >16.000.
+  const marker = '[maar]';
+  const vullingLengte = 400 - marker.length - 1;
+  const zinnen = [];
+  for (let i = 0; i < 110; i++) {
+    const vulling = laagRedundanteTekst(i, vullingLengte);
+    zinnen.push({ niveau: 'C', soort: 'te', tekst: `${marker} ${vulling}`.slice(0, 400) });
+  }
+  const link = await bouwLink(ctx.basisUrl, { naam: 'Lange set', datum: '2026-09-01', zinnen });
+  const page = await ctx.context.newPage();
+  await page.goto(`${ctx.basisUrl}leerkracht.html${new URL(link).hash}`, { waitUntil: 'networkidle' });
+  await page.fill('#naam-veld', 'Lange set gewijzigd');
+  await page.click('#knop-link-bijwerken');
+  await page.waitForTimeout(200);
+  const veldWaarde = await page.inputValue('#link-veld');
+  // eslint-disable-next-line no-console
+  console.log(`Lengte van de waarschuwings-testlink: ${veldWaarde.length} tekens.`);
+  assert.ok(veldWaarde.length > 16000, `testlink is maar ${veldWaarde.length} tekens: te compressibel om de waarschuwing te toetsen`);
+  assert.ok(await page.isVisible('#link-lang-melding'));
+  assert.match(await page.textContent('#link-lang-melding'), /erg lang/);
+  await afbreken(ctx);
+});
 
 test('AC30+31: Zinnen beheren toont alle zinnen, filtert op niveau, en toont de vaste meldingen', async () => {
   const ctx = await opzetten();

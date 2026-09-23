@@ -303,7 +303,7 @@ The tester verifies each one in the real running app (Edge via Playwright, plus 
 2. "Begin de oefening" is disabled until an animal and a level are both chosen, and the hint "Kies eerst een dier en een niveau." is visible.
 3. When you open klaslink "Groep 8" with date 2026-10-12, the line "Zinnen: Groep 8 · bijgewerkt 12 okt" is on Start, Oefenen and Resultaat. A set dated in a previous year shows the year, for example "bijgewerkt 12 okt 2025".
 4. With a klaslink that has only Basis sentences, the Cito option is disabled and shows "Deze set heeft geen zinnen op dit niveau."
-5. The "Leerkracht" button is at the bottom right of Start. Clicking it opens "Zinnen beheren" with the same `#` part in the address bar.
+5. The "Leerkracht" button is at the top right of Start (in the header). Clicking it opens "Zinnen beheren" with the same `#` part in the address bar.
 6. A klaslink cut off after 60% of its characters shows "Deze link is niet compleet of beschadigd…" plus the button "Oefenen met de standaardzinnen". It never shows a white screen and never logs an uncaught error. The button starts the starting set without changing the URL.
 7. A klaslink with the sentence text `<img src=x onerror=alert(1)>` shows that text literally. No dialog opens and no image is requested.
 

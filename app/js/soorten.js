@@ -2,6 +2,8 @@
 // Geen DOM, geen storage: alleen data en kleine helperfuncties, zodat dit
 // bestand los te testen is (soorten.test.mjs).
 
+import { parseMarker } from './zin.js';
+
 /** @typedef {'og'|'te'|'op'|'ti'|'do'|'vw'|'vg'|'sc'} SoortCode */
 
 export const SOORTEN = [
@@ -94,7 +96,9 @@ export const LEXICON = [
   { woord: 'als', types: ['vw', 'ti', 'vg'], klasse: 'onder', basis: false, zwak: true },
   { woord: 'indien', types: ['vw'], klasse: 'onder', basis: false, zwak: false },
   { woord: 'mits', types: ['vw'], klasse: 'onder', basis: false, zwak: false },
-  { woord: 'tenzij', types: ['vw'], klasse: 'onder', basis: false, zwak: false },
+  // "tenzij" keert de gewone vw-uitleg om (het is de uitzondering, niet de vereiste
+  // voorwaarde), dus krijgt het een eigen, woord-specifieke uitleg (zie vindUitleg()).
+  { woord: 'tenzij', types: ['vw'], klasse: 'onder', basis: false, zwak: false, uitleg: 'vertelt wanneer iets níet doorgaat' },
   { woord: 'wanneer', types: ['vw', 'ti'], klasse: 'onder', basis: false, zwak: false },
   { woord: 'op voorwaarde dat', types: ['vw'], klasse: 'onder', basis: false, zwak: false },
   { woord: 'in dat geval', types: ['vw'], klasse: 'bijw', basis: false, zwak: false },
@@ -107,7 +111,7 @@ export const LEXICON = [
   { woord: 'hetzelfde als', types: ['vg'], klasse: 'vz', basis: false, zwak: false },
   { woord: 'vergeleken met', types: ['vg'], klasse: 'vz', basis: false, zwak: false },
   { woord: 'in vergelijking met', types: ['vg'], klasse: 'vz', basis: false, zwak: false },
-  { woord: 'dan', types: ['vg'], klasse: 'bijw', basis: false, zwak: true },
+  { woord: 'dan', types: ['vg', 'ti', 'vw'], klasse: 'bijw', basis: false, zwak: true },
   // samenvatting / conclusie
   { woord: 'kortom', types: ['sc'], klasse: 'bijw', basis: false, zwak: false },
   { woord: 'al met al', types: ['sc'], klasse: 'bijw', basis: false, zwak: false },
@@ -140,4 +144,42 @@ export function isGeldigeSoortCode(code) {
 
 export function isGeldigeKlasse(klasse) {
   return GRAMMATICALE_KLASSEN.includes(klasse);
+}
+
+/**
+ * De uitleg voor de feedbacktekst: meestal de algemene soort-uitleg, maar een enkel
+ * woord (zoals "tenzij", dat de vw-uitleg omkeert) heeft een eigen `uitleg` in het
+ * lexicon die voorrang krijgt.
+ * @param {string} woord
+ * @param {{uitleg: string}} soort
+ */
+export function vindUitleg(woord, soort) {
+  return vindLexiconWoord(woord)?.uitleg ?? soort.uitleg;
+}
+
+/**
+ * Vaste woordparen die samen één signaalconstructie vormen (niet alleen … ook,
+ * zowel … als). Bij Aanwijzen telt een klik op het tweede woord ook als goed.
+ * Sleutels en waarden zijn lowercase, zodat opzoeken hoofdletterongevoelig is.
+ */
+export const SIGNAAL_PAREN = { 'niet alleen': 'ook', zowel: 'als' };
+
+/**
+ * Zoekt, buiten de gemarkeerde frase van `zin`, een ander signaalwoord (zwak of
+ * niet) uit het lexicon. Gebruikt voor de Aanwijzen-instructie: als er zo'n
+ * tweede woord in de zin staat, is "Klik op het signaalwoord in de zin" niet
+ * eenduidig genoeg en tonen we in plaats daarvan het gevraagde soort.
+ * PURE: alleen tekst in, een lexicon-item (of null) uit.
+ * @param {{tekst: string}} zin
+ */
+export function vindTweedeSignaalwoord(zin) {
+  const { voor, woord, na } = parseMarker(zin.tekst);
+  const buiten = `${voor} ${na}`;
+  for (const item of LEXICON) {
+    if (item.woord.toLowerCase() === woord.toLowerCase()) continue;
+    const escaped = item.woord.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(`(^|[^\\p{L}\\p{N}])${escaped}([^\\p{L}\\p{N}]|$)`, 'iu');
+    if (regex.test(buiten)) return item;
+  }
+  return null;
 }

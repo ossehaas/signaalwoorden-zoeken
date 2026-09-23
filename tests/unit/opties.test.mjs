@@ -83,3 +83,57 @@ test('geen hoofdletter bij een doelwoord midden in de zin', () => {
     assert.equal(optie, optie.toLowerCase());
   }
 });
+
+// ---------- B-D: regels die overlappende Invullen-opties voorkomen, voor de hele beginset ----------
+
+function meerdereRngSeeds() {
+  // Een paar vaste, verschillende pseudo-rng's, zodat de schud-volgorde niet toevallig
+  // dezelfde afleiders oplevert bij elke testrun.
+  return [Math.random, () => 0, () => 0.999, () => 0.5];
+}
+
+test('D1: nooit een zwak lexiconwoord als afleider', () => {
+  for (const zin of beginset.zinnen) {
+    const { woord } = parseMarker(zin.tekst);
+    for (const rng of meerdereRngSeeds()) {
+      const opties = genereerOpties(zin, rng);
+      for (const optie of opties) {
+        if (optie.toLowerCase() === woord.toLowerCase()) continue;
+        const item = vindLexiconItem(optie);
+        assert.ok(!item.zwak, `"${optie}" is een zwak woord en mag geen afleider zijn (zin: "${zin.tekst}")`);
+      }
+    }
+  }
+});
+
+const OORZAAK_ONDERSCHIKKERS = ['omdat', 'doordat'];
+const TIJD_ONDERSCHIKKERS = ['toen', 'nadat', 'zodra', 'terwijl', 'als', 'wanneer'];
+const GEBLOKKEERDE_PAREN = [
+  ['daarom', 'daarvoor'],
+  ['in tegenstelling tot', 'vergeleken met'],
+  ['in tegenstelling tot', 'in vergelijking met'],
+];
+
+function vormtGeblokkeerdPaar(a, b) {
+  const x = a.toLowerCase();
+  const y = b.toLowerCase();
+  if (OORZAAK_ONDERSCHIKKERS.includes(x) && TIJD_ONDERSCHIKKERS.includes(y)) return true;
+  if (OORZAAK_ONDERSCHIKKERS.includes(y) && TIJD_ONDERSCHIKKERS.includes(x)) return true;
+  return GEBLOKKEERDE_PAREN.some(([p, q]) => (x === p && y === q) || (x === q && y === p));
+}
+
+test('D2+D3: geen afleider vormt een bekend verwarrend paar met het doelwoord', () => {
+  for (const zin of beginset.zinnen) {
+    const { woord } = parseMarker(zin.tekst);
+    for (const rng of meerdereRngSeeds()) {
+      const opties = genereerOpties(zin, rng);
+      for (const optie of opties) {
+        if (optie.toLowerCase() === woord.toLowerCase()) continue;
+        assert.ok(
+          !vormtGeblokkeerdPaar(woord, optie),
+          `"${optie}" is een verwarrend paar met doelwoord "${woord}" (zin: "${zin.tekst}")`,
+        );
+      }
+    }
+  }
+});
