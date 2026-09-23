@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  tokenize, parseMarker, naarOpgeslagenTekst, platteZin, isMarkerBeginZin,
+  tokenize, parseMarker, naarOpgeslagenTekst, platteZin, isMarkerBeginZin, isMarkerBeginZinnetje,
   hoofdletter, saniteerInvoer, klikOpWoord, markNaarOpgeslagenTekst, markNaTekstwijziging, ZinFout,
 } from '../../app/js/zin.js';
 
@@ -43,6 +43,20 @@ test('naarOpgeslagenTekst + platteZin round-trip', () => {
 test('isMarkerBeginZin', () => {
   assert.equal(isMarkerBeginZin('[Maar] toch niet.'), true);
   assert.equal(isMarkerBeginZin('Dit is [maar] niet.'), false);
+  // isMarkerBeginZin kijkt naar de hele tekst: het begin van een TWEEDE zinnetje telt niet.
+  assert.equal(isMarkerBeginZin('Het regende. [Daardoor] was de weg drassig.'), false);
+});
+
+test('isMarkerBeginZinnetje', () => {
+  assert.equal(isMarkerBeginZinnetje('[Maar] toch niet.'), true);
+  assert.equal(isMarkerBeginZinnetje('Dit is [maar] niet.'), false);
+  // A2 (ronde 2): het begin van een tweede zinnetje telt hier wél mee, na een punt,
+  // uitroepteken, vraagteken, dubbele punt of puntkomma.
+  assert.equal(isMarkerBeginZinnetje('Het regende. [Daardoor] was de weg drassig.'), true);
+  assert.equal(isMarkerBeginZinnetje('Het regende! [Daardoor] was de weg drassig.'), true);
+  assert.equal(isMarkerBeginZinnetje('Ze zei dit: [daardoor] was de weg drassig.'), true);
+  // een woord vlak vóór de marker zonder zinseinde-teken telt niet mee.
+  assert.equal(isMarkerBeginZinnetje('Ze zei dit, [daardoor] was de weg drassig.'), false);
 });
 
 test('hoofdletter', () => {

@@ -73,6 +73,21 @@ export function isMarkerBeginZin(opgeslagenTekst) {
   return voor.trim().length === 0;
 }
 
+// Zinseinde-leestekens: punt, uitroepteken, vraagteken, dubbele punt, puntkomma.
+const ZINSEINDE_REGEX = /[.!?:;]\s*$/;
+
+/**
+ * Is de marker het eerste woord van EEN zin binnen de tekst (dus ook het begin van de
+ * tweede zin bij een tweezinnige Cito-opgave, niet alleen het allereerste woord)?
+ * Gebruikt voor de hoofdletter-beslissing in opties.js (A2, ronde 2): het doelwoord staat
+ * dan met een hoofdletter in de brontekst, dus de afleiders moeten dat ook krijgen, anders
+ * verraadt de hoofdletter het antwoord.
+ */
+export function isMarkerBeginZinnetje(opgeslagenTekst) {
+  const { voor } = parseMarker(opgeslagenTekst);
+  return voor.trim().length === 0 || ZINSEINDE_REGEX.test(voor);
+}
+
 /** Zet de eerste letter van een woord om naar een hoofdletter (rest blijft gelijk). */
 export function hoofdletter(woord) {
   if (!woord) return woord;
