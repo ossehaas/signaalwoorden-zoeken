@@ -137,6 +137,40 @@ test('AC12: een tweede sterk signaalwoord verandert de instructie', async () => 
   await afbreken(ctx);
 });
 
+// B-code-4 (ronde 2): de instructie moet ALTIJD het soort tonen, ook zonder een tweede
+// lexiconwoord in de zin — anders zou een gevraagd woord dat zelf niet in het lexicon
+// staat (bijv. "nu", "tot", "na") de neutrale instructie "in de zin" ten onrechte
+// ondubbelzinnig laten lijken.
+test('B-code-4: Aanwijzen toont het soort ook zonder een tweede signaalwoord in de zin', async () => {
+  const ctx = await opzetten();
+  const eenZin = testSet({
+    zinnen: [{ niveau: 'C', soort: 'og', tekst: 'De weg was glad, [waardoor] het verkeer erg langzaam reed.' }],
+  });
+  const link = await bouwLink(ctx.basisUrl, eenZin);
+  const page = await ctx.context.newPage();
+  await page.goto(link, { waitUntil: 'networkidle' });
+  await begin(page, { niveau: 'Cito', vorm: 'Aanwijzen' });
+  assert.equal(await page.textContent('#instructie-tekst'), 'Klik op het signaalwoord voor: oorzaak-gevolg');
+  await afbreken(ctx);
+});
+
+// B-code-4 (ronde 2): een klik op "te" bij een "om ... te"-doelzin telt ook als goed, ook
+// al is "te" zelf geen lexiconwoord (het hoort wél bij de constructie).
+test('B-code-4: bij "om ... te" telt een klik op "te" ook als goed', async () => {
+  const ctx = await opzetten();
+  const omTeZin = testSet({
+    zinnen: [{ niveau: 'C', soort: 'do', tekst: '[Om] op tijd te vertrekken, pakte ze haar spullen alvast in.' }],
+  });
+  const link = await bouwLink(ctx.basisUrl, omTeZin);
+  const page = await ctx.context.newPage();
+  await page.goto(link, { waitUntil: 'networkidle' });
+  await begin(page, { niveau: 'Cito', vorm: 'Aanwijzen' });
+  await page.click('.zin-woord:text-is("te")');
+  await page.waitForTimeout(50);
+  assert.match(await page.textContent('#feedback-paneel'), /Goed zo!/);
+  await afbreken(ctx);
+});
+
 test('AC13: Invullen toont een leeg vak met opties, en vult na antwoord het juiste woord in', async () => {
   const ctx = await opzetten();
   const link = await bouwLink(ctx.basisUrl, EEN_PER_SOORT);

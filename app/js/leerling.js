@@ -2,7 +2,7 @@
 // (geen storage, geen URL-wijzigingen): zie privacy.md en PLAN.md §3.4.
 import { DIEREN } from './dieren.js';
 import {
-  SOORTEN, ALLE_SOORTCODES, BASIS_SOORTCODES, vindSoort, vindTweedeSignaalwoord, SIGNAAL_PAREN, vindUitleg,
+  SOORTEN, ALLE_SOORTCODES, BASIS_SOORTCODES, vindSoort, SIGNAAL_PAREN, AANWIJZEN_EXTRA_PAREN, vindUitleg,
 } from './soorten.js';
 import { laadVoorLeerling } from './set.js';
 import { LinkFout } from './codec.js';
@@ -242,9 +242,11 @@ function renderAanwijzen(zin) {
   const markTokenIdxen = [];
   tokens.forEach((t, i) => { if (t.isWoord && t.start >= markStartChar && t.eind <= markEindChar) markTokenIdxen.push(i); });
 
-  // Ook een gepaard woord (bijv. "ook" bij "niet alleen") telt als een correct antwoord,
-  // en telt niet mee als "tweede signaalwoord" dat de instructie zou omzetten.
-  const gepaardWoord = SIGNAAL_PAREN[woord.toLowerCase()] ?? null;
+  // Ook een gepaard woord telt als een correct antwoord: SIGNAAL_PAREN voor paren die
+  // allebei een eigen lexiconwoord zijn (bijv. "ook" bij "niet alleen"), en
+  // AANWIJZEN_EXTRA_PAREN voor een functiewoord dat geen eigen signaalwoord is maar wel
+  // bij de constructie hoort ("te" bij "om", B-code-4 ronde 2).
+  const gepaardWoord = SIGNAAL_PAREN[woord.toLowerCase()] ?? AANWIJZEN_EXTRA_PAREN[woord.toLowerCase()] ?? null;
   const gepaardTokenIdxen = [];
   if (gepaardWoord) {
     tokens.forEach((t, i) => {
@@ -252,13 +254,12 @@ function renderAanwijzen(zin) {
     });
   }
 
-  // Elk ander signaalwoord (ook een zwak woord zoals "ook", "als" of "dan") buiten de
-  // marker maakt "Klik op het signaalwoord in de zin" dubbelzinnig; toon dan het soort.
-  const tweedeWoord = vindTweedeSignaalwoord(zin);
+  // A6/B-code-4 (ronde 2): altijd het soort in de instructie tonen, niet alleen als er
+  // toevallig een tweede lexiconwoord in de zin staat. Sommige gevraagde woorden (nu, tot,
+  // na, naast, pas) staan zelf niet in het lexicon, dus "in de zin" zou voor die zinnen
+  // ten onrechte ondubbelzinnig lijken terwijl het kind niet weet wélk woord bedoeld is.
   const soort = vindSoort(zin.soort);
-  $('instructie-tekst').textContent = tweedeWoord
-    ? `Klik op het signaalwoord voor: ${soort.label.toLowerCase()}`
-    : 'Klik op het signaalwoord in de zin.';
+  $('instructie-tekst').textContent = `Klik op het signaalwoord voor: ${soort.label.toLowerCase()}`;
 
   const kaart = $('zin-kaart');
   kaart.replaceChildren();

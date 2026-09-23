@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   SOORTEN, ALLE_SOORTCODES, BASIS_SOORTCODES, LEXICON, isGeldigeKlasse, woordenVoorSoort,
-  vindTweedeSignaalwoord, SIGNAAL_PAREN, vindSoort, vindUitleg,
+  vindTweedeSignaalwoord, SIGNAAL_PAREN, AANWIJZEN_EXTRA_PAREN, vindSoort, vindUitleg, vindLexiconWoord,
 } from '../../app/js/soorten.js';
 import beginset from '../../app/data/beginset.js';
 import { parseMarker } from '../../app/js/zin.js';
@@ -98,6 +98,14 @@ test('voor elke beginset-zin met een SIGNAAL_PAREN-doelwoord staat het gepaarde 
     assert.ok(new RegExp(`(^|[^\\p{L}])${gepaard}([^\\p{L}]|$)`, 'u').test(buiten), `"${gepaard}" ontbreekt in "${zin.tekst}"`);
   }
   assert.ok(gezien > 0, 'geen enkele beginset-zin gebruikt een SIGNAAL_PAREN-woord: test dekt niets');
+});
+
+// B-code-4 (ronde 2): "om ... te" (doel) — "te" is zelf geen lexiconwoord (het zou nooit
+// een eerlijke Invullen-afleider zijn), maar telt bij Aanwijzen wél mee als klik op "om".
+test('AANWIJZEN_EXTRA_PAREN: "om" -> "te", en "te" staat bewust NIET in het lexicon', () => {
+  assert.equal(AANWIJZEN_EXTRA_PAREN.om, 'te');
+  assert.ok(vindLexiconWoord('om'), '"om" moet wel een eigen lexiconwoord zijn (het is de doel-marker)');
+  assert.equal(vindLexiconWoord('te'), null, '"te" is een functiewoord, geen zelfstandig signaalwoord');
 });
 
 test('Aanwijzen-instructie toont het soort zodra er een tweede signaalwoord is (AC12)', () => {

@@ -159,10 +159,19 @@ export function vindUitleg(woord, soort) {
 
 /**
  * Vaste woordparen die samen één signaalconstructie vormen (niet alleen … ook,
- * zowel … als). Bij Aanwijzen telt een klik op het tweede woord ook als goed.
- * Sleutels en waarden zijn lowercase, zodat opzoeken hoofdletterongevoelig is.
+ * zowel … als, net zo … als). Bij Aanwijzen telt een klik op het tweede woord ook als goed.
+ * Sleutels en waarden zijn lowercase, zodat opzoeken hoofdletterongevoelig is. Beide woorden
+ * van een paar staan hier als eigen woord in het LEXICON (zie de test in soorten.test.mjs).
  */
-export const SIGNAAL_PAREN = { 'niet alleen': 'ook', zowel: 'als' };
+export const SIGNAAL_PAREN = { 'niet alleen': 'ook', zowel: 'als', 'net zo': 'als' };
+
+/**
+ * Functiewoorden die zelf geen signaalwoord zijn (dus niet in LEXICON — ze zouden nooit
+ * een eerlijke Invullen-afleider zijn), maar bij Aanwijzen wél bij de constructie van hun
+ * hoofdwoord horen: "[Om] ... te ..." (doel). Los van SIGNAAL_PAREN gehouden, zodat de
+ * "staat in het lexicon"-eis daarop niet per ongeluk verzwakt wordt (B-code-4, ronde 2).
+ */
+export const AANWIJZEN_EXTRA_PAREN = { om: 'te' };
 
 /**
  * Zoekt, buiten de gemarkeerde frase van `zin`, een ander signaalwoord (zwak of
