@@ -19,7 +19,14 @@ import { fileURLToPath } from 'node:url';
 import { maakKlaslink, ontsleutelFragment, haalFragmentUitHash } from '../app/js/codec.js';
 import { genereerOpties } from '../app/js/opties.js';
 import { parseMarker } from '../app/js/zin.js';
-import beginset from '../app/data/beginset.js';
+// A2 (ronde 3): app/data/beginset.js NIET hier bovenaan importeren. Dat zou betekenen dat
+// elke aanroep van dit script beginset.js eerst laadt (en dus laat crashen als dat bestand
+// corrupt is) — ook `--decode --module --out`, terwijl dat commando juist bedoeld is om een
+// kapotte beginset.js te HERSTELLEN (zie HULP.md "Zelf neerzetten (ICT)"). In plaats daarvan
+// laadt elke tak hieronder de beginset alleen als hij hem echt nodig heeft.
+async function laadBeginset() {
+  return (await import('../app/data/beginset.js')).default;
+}
 
 const hier = path.dirname(fileURLToPath(import.meta.url));
 const APP_URL = 'https://voorbeeld.school/tools/signaalwoorden-zoeken/app/';
@@ -31,6 +38,7 @@ function leesArg(vlag) {
 
 async function main() {
   if (process.argv.includes('--opties')) {
+    const beginset = await laadBeginset();
     for (const zin of beginset.zinnen) {
       const { woord } = parseMarker(zin.tekst);
       const opties = genereerOpties(zin, Math.random);
@@ -69,7 +77,7 @@ async function main() {
   }
 
   const setPad = leesArg('--set');
-  const set = setPad ? JSON.parse(readFileSync(path.resolve(process.cwd(), setPad), 'utf8')) : beginset;
+  const set = setPad ? JSON.parse(readFileSync(path.resolve(process.cwd(), setPad), 'utf8')) : await laadBeginset();
   const link = await maakKlaslink(set, APP_URL);
   console.log(link);
   console.log(`Lengte van het fragment na "z=": ${link.split('#z=')[1].length} tekens.`);
