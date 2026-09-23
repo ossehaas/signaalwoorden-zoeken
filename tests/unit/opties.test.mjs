@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { genereerOpties } from '../../app/js/opties.js';
-import { parseMarker, hoofdletter, isMarkerBeginZin, isMarkerBeginZinnetje } from '../../app/js/zin.js';
+import { parseMarker, hoofdletter, isMarkerBeginZin } from '../../app/js/zin.js';
 import { LEXICON } from '../../app/js/soorten.js';
 import beginset from '../../app/data/beginset.js';
 
@@ -123,11 +123,84 @@ test('hoofdletter bij een zin-beginnend doelwoord', () => {
   }
 });
 
-test('geen hoofdletter bij een doelwoord midden in de zin', () => {
-  const zinMidden = beginset.zinnen.find((z) => !isMarkerBeginZinnetje(z.tekst));
+test('geen hoofdletter bij een doelwoord dat zelf lowercase in de brontekst staat', () => {
+  // A1 (ronde 3): de beslissing volgt nu het doelwoord zelf, niet de interpunctie ervoor.
+  const zinMidden = beginset.zinnen.find((z) => {
+    const { woord } = parseMarker(z.tekst);
+    return !/^\p{Lu}/u.test(woord);
+  });
+  assert.ok(zinMidden, 'geen enkele testzin heeft een lowercase doelwoord');
   const opties = genereerOpties(zinMidden, Math.random);
   for (const optie of opties) {
     assert.equal(optie, optie.toLowerCase());
+  }
+});
+
+// A1 (ronde 3, gericht): deze drie beginset-zinnen hebben een lowercase doelwoord na een
+// komma/puntkomma binnen een langer zinsdeel ("…piepten; [kortom], …") — met de oude,
+// interpunctie-gebaseerde isMarkerBeginZinnetje-check kreeg zo'n woord soms toch onterecht
+// een hoofdletter aangeboden bij de afleiders. Getest met veel seeds (zie veelRngSeeds).
+test('A1: #63/#67/#69 geven altijd volledig lowercase opties', () => {
+  const indices = [63, 67, 69];
+  for (const index of indices) {
+    const zin = beginset.zinnen[index];
+    const { woord } = parseMarker(zin.tekst);
+    assert.ok(!/^\p{Lu}/u.test(woord), `testveronderstelling klopt niet: doelwoord #${index} is al hoofdletter`);
+    for (const rng of veelRngSeeds()) {
+      const opties = genereerOpties(zin, rng);
+      for (const optie of opties) {
+        assert.equal(optie, optie.toLowerCase(), `zin #${index} ("${zin.tekst}") gaf een hoofdletter-optie`);
+      }
+    }
+  }
+});
+
+// A1 (ronde 3, het exacte lekgeval uit de review): een marker na een aanhalingsteken dat
+// zelf weer na een zinseinde-teken staat. De oude check zag hier geen "begin zinnetje"
+// (het teken vlak voor de marker is een aanhalingsteken, geen punt), terwijl het doelwoord
+// "Toch" wél degelijk met een hoofdletter in de brontekst staat — dus zonder de fix zou
+// alleen het juiste antwoord een hoofdletter krijgen en het antwoord verraden.
+test('A1: na een aanhalingsteken volgt de hoofdletter het doelwoord, niet de interpunctie', () => {
+  const zin = {
+    niveau: 'C', soort: 'te', tekst: 'Ze riep: "Kom op, we gaan!" [Toch] bleef iedereen nog een tijdje rustig zitten wachten.',
+  };
+  for (const rng of veelRngSeeds()) {
+    const opties = genereerOpties(zin, rng);
+    for (const optie of opties) {
+      assert.equal(optie.charAt(0), optie.charAt(0).toUpperCase(), `optie "${optie}" mist de hoofdletter`);
+    }
+  }
+});
+
+// A1 (ronde 3): een afkorting vlak voor de marker ("o.a.") mag de hoofdletter-beslissing
+// niet beïnvloeden — die volgt uitsluitend het doelwoord zelf.
+test('A1: een afkorting vlak voor de marker geeft geen hoofdletter (doelwoord is lowercase)', () => {
+  const zin = {
+    niveau: 'C', soort: 'og', tekst: 'De klas ging naar het bos, o.a. [omdat] de juf graag paddenstoelen wilde zoeken met iedereen.',
+  };
+  for (const rng of veelRngSeeds()) {
+    const opties = genereerOpties(zin, rng);
+    for (const optie of opties) {
+      assert.equal(optie, optie.toLowerCase(), `optie "${optie}" kreeg ten onrechte een hoofdletter`);
+    }
+  }
+});
+
+// A1 (ronde 3, hele beginset): elke optie moet exact matchen met de hoofdletterstatus van
+// het DOELWOORD zelf, niet met een aparte "begin van het zinnetje"-gok.
+test('A1: over de hele beginset volgen alle opties de hoofdletter van het doelwoord', () => {
+  for (const zin of beginset.zinnen) {
+    const { woord } = parseMarker(zin.tekst);
+    const verwacht = /^\p{Lu}/u.test(woord);
+    for (const rng of meerdereRngSeeds()) {
+      const opties = genereerOpties(zin, rng);
+      for (const optie of opties) {
+        assert.equal(
+          /^\p{Lu}/u.test(optie), verwacht,
+          `zin #${beginset.zinnen.indexOf(zin)} ("${zin.tekst}"): optie "${optie}" heeft de verkeerde hoofdletterstatus`,
+        );
+      }
+    }
   }
 });
 
@@ -181,7 +254,8 @@ test('D1: nooit een zwak lexiconwoord als afleider', () => {
 // Lokale kopie van de blokkeerregels (niet geïmporteerd uit opties.js): dit bestand moet
 // het GEDRAG toetsen, niet dezelfde constanten tegen zichzelf herhalen — anders zou een
 // kapotte lijst in opties.js hier onopgemerkt blijven (zie de ronde-2 review, A4-minor).
-const OORZAAK_ONDERSCHIKKERS = ['omdat', 'doordat'];
+// "waardoor" toegevoegd: B3 (ronde 3, content-review).
+const OORZAAK_ONDERSCHIKKERS = ['omdat', 'doordat', 'waardoor'];
 // "voordat" toegevoegd (B-code-3, ronde 2).
 const TIJD_ONDERSCHIKKERS = ['toen', 'nadat', 'zodra', 'terwijl', 'als', 'wanneer', 'voordat'];
 // Nieuw (B-code-3, ronde 2): blokkeert tegen zowel OORZAAK als TIJD.
@@ -202,6 +276,13 @@ const GEBLOKKEERDE_PAREN = [
   ['uiteindelijk', 'tot slot'],
   ['net als', 'in tegenstelling tot'],
   ['evenals', 'in tegenstelling tot'],
+  // Nieuw (B2, ronde 3, content-review):
+  ['want', 'nadat'],
+  ['want', 'voordat'],
+  ['ook', 'toch'],
+  ['vervolgens', 'tot slot'],
+  ['daarna', 'tot slot'],
+  ['eerst', 'tot slot'],
 ];
 
 function vormtGeblokkeerdPaar(a, b) {
@@ -255,11 +336,79 @@ test('B-code-3: de 6 nieuwe geblokkeerde paren gelden echt (gericht, veel seeds)
   }
 });
 
+// B2 (ronde 3, content-review), gericht: dezelfde reden als hierboven (kleine kandidatenpool
+// per geval), nu voor de 6 nieuwe paren uit ronde 3.
+test('B2: de 6 nieuwe geblokkeerde paren van ronde 3 gelden echt (gericht, veel seeds)', () => {
+  const gevallen = [
+    { index: 73, verboden: ['nadat', 'voordat'] }, // want ↔ nadat/voordat
+    { index: 74, verboden: ['nadat', 'voordat'] },
+    { index: 75, verboden: ['nadat', 'voordat'] },
+    { index: 94, verboden: ['toch'] }, // ook ↔ toch
+    { index: 95, verboden: ['toch'] },
+    { index: 96, verboden: ['toch'] },
+    { index: 30, verboden: ['tot slot'] }, // daarna ↔ tot slot
+    { index: 31, verboden: ['tot slot'] }, // vervolgens ↔ tot slot
+  ];
+  for (const { index, verboden } of gevallen) {
+    const zin = beginset.zinnen[index];
+    for (const rng of veelRngSeeds()) {
+      const opties = genereerOpties(zin, rng).map((o) => o.toLowerCase());
+      for (const woord of verboden) {
+        assert.ok(!opties.includes(woord), `"${woord}" is aangeboden bij beginset-zin #${index} ("${zin.tekst}")`);
+      }
+    }
+  }
+});
+
+// B3 (ronde 3, content-review), gericht: "waardoor" bij OORZAAK_ONDERSCHIKKERS gevoegd,
+// dus een tijd-onderschikker (bijv. "voordat", "terwijl") mag niet meer als afleider
+// verschijnen bij een "waardoor"-zin.
+test('B3: "waardoor" blokkeert tijd-onderschikkers als afleider (gericht, veel seeds)', () => {
+  const zin = beginset.zinnen[8]; // og, [waardoor]
+  const { woord } = parseMarker(zin.tekst);
+  assert.equal(woord.toLowerCase(), 'waardoor', 'testveronderstelling klopt niet: zin #8 is niet meer "waardoor"');
+  for (const rng of veelRngSeeds()) {
+    const opties = genereerOpties(zin, rng).map((o) => o.toLowerCase());
+    assert.ok(!opties.includes('voordat'), `"voordat" is aangeboden bij beginset-zin #8 ("${zin.tekst}")`);
+    assert.ok(!opties.includes('terwijl'), `"terwijl" is aangeboden bij beginset-zin #8 ("${zin.tekst}")`);
+  }
+});
+
+// B1 (ronde 3, content-review): "daarvoor" mag nooit als afleider verschijnen, voor géén
+// enkel doelwoord — getoetst over de hele beginset (behalve waar "daarvoor" zelf het
+// doelwoord is, want dan is het uiteraard het juiste antwoord, geen afleider).
+test('B1: "daarvoor" wordt nergens in de beginset als afleider aangeboden', () => {
+  for (const zin of beginset.zinnen) {
+    const { woord } = parseMarker(zin.tekst);
+    if (woord.toLowerCase() === 'daarvoor') continue;
+    for (const rng of meerdereRngSeeds()) {
+      const opties = genereerOpties(zin, rng).map((o) => o.toLowerCase());
+      assert.ok(!opties.includes('daarvoor'), `"daarvoor" is aangeboden als afleider bij "${zin.tekst}"`);
+    }
+  }
+});
+
 // Lokale kopie (zie hierboven): dit is dezelfde lijst als ALGEMENE_TIJD_BIJWOORDEN in
-// opties.js, bewust opnieuw getypt in plaats van geïmporteerd.
+// opties.js, bewust opnieuw getypt in plaats van geïmporteerd. "eerst" en "ten slotte"
+// toegevoegd: B1 (ronde 3, content-review).
 const ALGEMENE_TIJD_BIJWOORDEN = [
   'daarna', 'vervolgens', 'uiteindelijk', 'inmiddels', 'intussen', 'ondertussen', 'tegenwoordig', 'vroeger',
+  'eerst', 'ten slotte',
 ];
+
+// B1 (ronde 3), gericht: "eerst" is pas net toegevoegd aan ALGEMENE_TIJD_BIJWOORDEN, dus
+// expliciet toetsen op de exacte gevallen uit de content-review (kleine kandidatenpool,
+// dus veel seeds nodig — zie de mulberry32-toelichting bij veelRngSeeds).
+test('B1: "eerst" wordt niet meer als afleider aangeboden bij een niet-tijd doelwoord (gericht)', () => {
+  const indices = [20, 22, 23, 87]; // Bovendien/Daarnaast (op) en Toch (te, Basis)
+  for (const index of indices) {
+    const zin = beginset.zinnen[index];
+    for (const rng of veelRngSeeds()) {
+      const opties = genereerOpties(zin, rng).map((o) => o.toLowerCase());
+      assert.ok(!opties.includes('eerst'), `"eerst" is aangeboden bij beginset-zin #${index} ("${zin.tekst}")`);
+    }
+  }
+});
 
 // B-code-1 (ronde 2, positie-onafhankelijk): D2 moet gelden voor ELK doelwoord dat zelf
 // geen tijd-woord is, ongeacht waar de marker in de zin staat (dus ook het begin van een
@@ -290,6 +439,25 @@ test('B-code-2: nooit een oorzaak-bijwoord als afleider bij een doel/voorwaarde/
     return item?.klasse === 'bijw' && doelTypes.some((t) => ['do', 'sc', 'vw'].includes(t));
   });
   assert.ok(kandidaten.length > 0, 'testveronderstelling klopt niet: geen do/sc/vw-bijwoord-zinnen gevonden');
+  for (const zin of kandidaten) {
+    for (const rng of meerdereRngSeeds()) {
+      const opties = genereerOpties(zin, rng).map((o) => o.toLowerCase());
+      for (const bijwoord of OG_BIJWOORDEN) {
+        assert.ok(!opties.includes(bijwoord), `"${bijwoord}" is aangeboden als afleider bij "${zin.tekst}"`);
+      }
+    }
+  }
+});
+
+// Optioneel (ronde 3, content-review, aanbevolen en geïmplementeerd): een oorzaak-bijwoord
+// mag ook nooit als afleider verschijnen bij een TIJD-bijwoord als doelwoord (bijv.
+// "inmiddels", "eerst") — dezelfde reden als B-code-2, nu uitgebreid naar 'ti'.
+test('optioneel: nooit een oorzaak-bijwoord als afleider bij een tijd-bijwoord-doelwoord', () => {
+  const kandidaten = beginset.zinnen.filter((z) => {
+    const { item, doelTypes } = doelTypesVoor(z);
+    return item?.klasse === 'bijw' && doelTypes.includes('ti');
+  });
+  assert.ok(kandidaten.length > 0, 'testveronderstelling klopt niet: geen tijd-bijwoord-zinnen gevonden');
   for (const zin of kandidaten) {
     for (const rng of meerdereRngSeeds()) {
       const opties = genereerOpties(zin, rng).map((o) => o.toLowerCase());
@@ -332,6 +500,21 @@ const VERBODEN_AFLEIDERS_PER_INDEX = {
   53: OG_BIJWOORDEN,
   64: OG_BIJWOORDEN,
   67: OG_BIJWOORDEN,
+  // Ronde 3, content-review (zie ook de gerichte B1/B2/B3-tests hierboven):
+  8: ['voordat', 'terwijl'], // B3: waardoor
+  20: ['eerst', 'daarvoor'], // B1
+  22: ['eerst', 'daarvoor'], // B1
+  23: ['eerst', 'daarvoor'], // B1
+  31: ['eerst', 'daarvoor'], // B1
+  30: ['tot slot'], // B2: daarna
+  87: ['eerst'], // B1: toch
+  73: ['nadat', 'voordat'], // B2: want
+  74: ['nadat', 'voordat'],
+  75: ['nadat', 'voordat'],
+  94: ['toch'], // B2: ook
+  95: ['toch'],
+  96: ['toch'],
+  37: OG_BIJWOORDEN, // optioneel: inmiddels (na de B-content-rewrite van #37)
 };
 
 test('B-code-5: regressietabel — de eerder gevonden "past ook nog"-woorden komen niet meer terug', () => {
