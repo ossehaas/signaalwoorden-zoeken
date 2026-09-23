@@ -1,0 +1,17 @@
+{
+  "name": "signaalwoorden-zoeken",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Oefenapp voor signaalwoorden (groep 6-8). Geen build, geen dependencies buiten devDependency playwright-core.",
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/unit/*.test.mjs",
+    "test:e2e": "node --test --test-concurrency=1 tests/e2e/*.test.mjs",
+    "serve": "node tools/serve.mjs",
+    "link": "node tools/link.mjs",
+    "screenshots": "node tools/screenshots.mjs"
+  },
+  "devDependencies": {
+    "playwright-core": "^1.47.0"
+  }
+}
