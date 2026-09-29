@@ -544,7 +544,7 @@ npm run serve            # → http://localhost:4173/tools/signaalwoorden-zoeken
     - Download the ZIP and copy the `app/` folder to any HTTPS web server or folder. No database, no server code, no settings.
     - Class links keep working: replace only the part before `#` with the new address.
     - Optionally, turn a class link into the starting set: `node tools/link.mjs --decode "<link>" --module --out app/data/beginset.js` (use `--out`, not `> file`: on Windows PowerShell 5.1 the redirect writes UTF-16 and gives a white screen), or ask your AI.
-  - **Vraag voor je eigen AI** (ready-to-paste block): "Ik gebruik de webapp 'Signaalwoorden zoeken'. De broncode staat op {{REPO_URL}}. Lees eerst HULP.md en AGENTS.md in die repository. Mijn probleem: [beschrijf wat je ziet, op welk apparaat en in welke browser, en sinds wanneer]. Leg in eenvoudige stappen uit wat ik kan doen. Verander niets aan de privacyregels uit AGENTS.md."
+  - **Vraag voor je eigen AI** (ready-to-paste block): "Ik gebruik de webapp 'Signaalwoorden zoeken'. De broncode staat op https://github.com/ossehaas/signaalwoorden-zoeken. Lees eerst HULP.md en AGENTS.md in die repository. Mijn probleem: [beschrijf wat je ziet, op welk apparaat en in welke browser, en sinds wanneer]. Leg in eenvoudige stappen uit wat ik kan doen. Verander niets aan de privacyregels uit AGENTS.md."
   - **Mailen:** via the contact details on the page where you found the app; we look when we can, often within a few days, but there is no guarantee, no fixed response time and it is not a helpdesk.
 - **`AGENTS.md` (English, for any AI coding assistant):**
   - Purpose (3 lines).
@@ -579,7 +579,7 @@ npm run serve            # → http://localhost:4173/tools/signaalwoorden-zoeken
 - **`.gitignore`:** `node_modules/`, `test-results/`, `*.log`, `.DS_Store`, `Thumbs.db`, `tmp/`.
 - **`app/`:** the static site (§2).
 
-`{{REPO_URL}}` in HULP.md, README.md and AANPASSEN-MET-AI.md is the only placeholder. The publisher replaces it. It never appears in `app/`.
+`https://github.com/ossehaas/signaalwoorden-zoeken` in HULP.md, README.md and AANPASSEN-MET-AI.md is the only placeholder. The publisher replaces it. It never appears in `app/`.
 
 ---
 
@@ -598,7 +598,7 @@ npm run screenshots          # → docs/screenshots/01-start.png … 05-handleid
 **Artefacts the publisher gets:**
 1. **Web folder:** the contents of `app/`, copied unchanged to `site/wwwroot/tools/signaalwoorden-zoeken/app/`. App URL: `/tools/signaalwoorden-zoeken/app/`. The site must serve `.webmanifest` as `application/manifest+json` and `.js` as `text/javascript`. Check with a request after deployment.
 2. **Screenshots:** `docs/screenshots/*.png` → `site/wwwroot/tools/signaalwoorden-zoeken/img/`.
-3. **Repo:** this folder as its own git repo (MIT). Replace `{{REPO_URL}}` in the docs.
+3. **Repo:** this folder as its own git repo (MIT). Replace `https://github.com/ossehaas/signaalwoorden-zoeken` in the docs.
 4. **For the app page on the website** (the publisher's text, not in the app):
    - The ready-to-paste AI question from HULP.md.
    - Links to HULP.md and the handleiding (`app/handleiding.html`).

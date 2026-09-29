@@ -81,7 +81,7 @@ Dat is niet erg: er verandert niets voor andere kinderen. Sluit gewoon het tabbl
 
 Plak dit in je eigen AI-assistent (bijvoorbeeld ChatGPT of Copilot):
 
-> Ik gebruik de webapp 'Signaalwoorden zoeken'. De broncode staat op {{REPO_URL}}. Lees
+> Ik gebruik de webapp 'Signaalwoorden zoeken'. De broncode staat op https://github.com/ossehaas/signaalwoorden-zoeken. Lees
 > eerst HULP.md en AGENTS.md in die repository. Mijn probleem: [beschrijf wat je ziet, op
 > welk apparaat en in welke browser, en sinds wanneer]. Leg in eenvoudige stappen uit wat ik
 > kan doen. Verander niets aan de privacyregels uit AGENTS.md.

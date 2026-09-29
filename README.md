@@ -66,7 +66,7 @@ Er is geen database en geen servercode nodig. Zorg dat de server `.webmanifest` 
 
 ## Broncode
 
-{{REPO_URL}}
+https://github.com/ossehaas/signaalwoorden-zoeken
 
 ## Meer lezen
 

@@ -6,7 +6,7 @@ programmeur bent. Dit stappenplan legt uit hoe.
 
 ## 1. Download de code
 
-- Ga naar de broncode-pagina van deze app: {{REPO_URL}}
+- Ga naar de broncode-pagina van deze app: https://github.com/ossehaas/signaalwoorden-zoeken
 - Klik op de groene knop "Code" → "Download ZIP", en pak het bestand uit.
 - (Kun je met Git werken? Dan kan `git clone` ook.)
 
