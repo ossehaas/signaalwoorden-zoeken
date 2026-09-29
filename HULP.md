@@ -8,6 +8,42 @@ Voor leerkrachten en school-ICT.
 - Houd voor belangrijke momenten (bijvoorbeeld een toetsweek) een papieren werkblad achter
   de hand.
 
+## Vragen over het gebruik
+
+**Wat is het verschil tussen Basis en Cito?**
+Zie de tabel "Niveaus en soorten signaalwoorden" in [README.md](README.md#niveaus-en-soorten-signaalwoorden).
+Kort samengevat: Basis heeft 4 soorten signaalwoorden en kortere zinnen, Cito heeft alle 8
+soorten en langere fragmenten.
+
+**Hoeveel zinnen zitten er in een ronde, en welke soorten komen erin?**
+Een ronde heeft 10 zinnen van het gekozen niveau, in willekeurige volgorde. Elk soort van
+dat niveau komt (voor zover de set dat toelaat) minstens één keer voor: bij Basis dus alle
+4 soorten, bij Cito alle 8. Heeft de set minder dan 10 zinnen op dat niveau, dan gebruikt de
+ronde ze allemaal.
+
+**Kan ik zelf zinnen toevoegen? Kan ik zelf signaalwoorden of soorten toevoegen?**
+Zinnen: ja, via "Leerkracht" (zie hierboven "Voor de leerkracht" in het README). Soorten:
+nee, de 8 soorten liggen vast in de app. Signaalwoorden: alleen door de code aan te passen,
+zie [AANPASSEN-MET-AI.md](AANPASSEN-MET-AI.md).
+
+**Kan ik zien hoe een kind het deed?**
+Nee. Er wordt niets bewaard: de score staat alleen in het geheugen van dat ene tabblad en
+is weg zodra het kind op "Nieuwe ronde" klikt, een nieuw dier kiest, herlaadt of het tabblad
+sluit. Laat het kind in plaats daarvan het resultaatscherm aan je laten zien.
+
+**Werkt het op een iPad of Chromebook?**
+Ja. Chromebooks werken altijd, want die updaten zichzelf automatisch. Voor een handmatig
+bijgewerkt apparaat gelden deze minimale browserversies: Chrome of Edge 105 of nieuwer,
+Safari 16.4 of nieuwer (iPadOS 16.4, maart 2023) en Firefox 121 of nieuwer. Een oudere
+browser kan de klaslink niet openen en krijgt een duidelijke melding ("Deze browser is te
+oud voor deze link") in plaats van een wit scherm; het gekozen dier en de keuzekaarten zien
+er dan mogelijk ook iets minder duidelijk uit.
+
+**Hoe deel ik mijn zinnen met een collega?**
+Stuur de klaslink door (bijvoorbeeld via de mail of het gedeelde document waar hij al
+staat). Elke leerkracht heeft haar eigen link; wijzigingen in de ene link hebben geen
+invloed op een andere.
+
 ## Wit scherm / de app laadt niet
 
 1. Herlaad de pagina (Ctrl+R), en als dat niet helpt: Ctrl+Shift+R (een "harde" herlaad).
@@ -79,12 +115,19 @@ Dat is niet erg: er verandert niets voor andere kinderen. Sluit gewoon het tabbl
 
 ## Vraag voor je eigen AI
 
-Plak dit in je eigen AI-assistent (bijvoorbeeld ChatGPT of Copilot):
+Plak dit in je eigen AI-assistent (bijvoorbeeld ChatGPT, Copilot of Claude):
 
-> Ik gebruik de webapp 'Signaalwoorden zoeken'. De broncode staat op https://github.com/ossehaas/signaalwoorden-zoeken. Lees
-> eerst HULP.md en AGENTS.md in die repository. Mijn probleem: [beschrijf wat je ziet, op
-> welk apparaat en in welke browser, en sinds wanneer]. Leg in eenvoudige stappen uit wat ik
-> kan doen. Verander niets aan de privacyregels uit AGENTS.md.
+> Ik gebruik de webapp 'Signaalwoorden zoeken'. Lees eerst deze bestanden:
+> - https://raw.githubusercontent.com/ossehaas/signaalwoorden-zoeken/main/README.md
+> - https://raw.githubusercontent.com/ossehaas/signaalwoorden-zoeken/main/HULP.md
+> - https://raw.githubusercontent.com/ossehaas/signaalwoorden-zoeken/main/AGENTS.md
+>
+> Beantwoord daarna mijn vraag in eenvoudig Nederlands, stap voor stap. Ik ben geen
+> programmeur. Baseer je antwoord op deze bestanden en zeg het eerlijk als het antwoord
+> er niet in staat. Vraag nooit om namen of andere gegevens van leerlingen of collega's.
+> Verander niets aan de privacyregels uit AGENTS.md.
+>
+> Mijn vraag: [beschrijf je vraag of probleem, op welk apparaat, in welke browser en sinds wanneer]
 
 ## Mailen
 

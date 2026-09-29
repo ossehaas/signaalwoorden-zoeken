@@ -18,6 +18,46 @@ langere, Cito-achtige zinnen. Geen namen, geen inloggen, niets wordt bewaard of 
 5. Aan het eind zie je je score per soort signaalwoord, met bovenaan het soort waar je nog
    mee kan oefenen. Klik op "Nieuwe ronde" om opnieuw te beginnen.
 
+## Niveaus en soorten signaalwoorden
+
+Er zijn 8 soorten signaalwoorden. Basis gebruikt er 4, Cito alle 8:
+
+| Soort | Niveau | Uitleg voor kinderen |
+|---|---|---|
+| Oorzaak-gevolg | Basis en Cito | vertelt waardoor iets gebeurt of wat het gevolg is |
+| Tegenstelling | Basis en Cito | laat zien dat er iets anders komt dan je verwacht |
+| Opsomming | Basis en Cito | zet dingen op een rij: er komt nog iets bij |
+| Tijd | Basis en Cito | vertelt wanneer iets gebeurt of in welke volgorde |
+| Doel | Alleen Cito | vertelt waarvoor iemand iets doet |
+| Voorwaarde | Alleen Cito | vertelt wat er moet gelden, anders gebeurt het niet |
+| Vergelijking | Alleen Cito | laat zien dat dingen op elkaar lijken of van elkaar verschillen |
+| Samenvatting / conclusie | Alleen Cito | vat samen wat ervoor stond, of trekt een conclusie |
+
+Verschillen tussen de twee niveaus:
+
+| | Basis | Cito |
+|---|---|---|
+| Aantal soorten | 4 | 8 |
+| Zinlengte | 1-2 korte zinnen van 30-110 tekens | 1-3 zinnen |
+| Knoppen bij "Soort kiezen" | 4 | 8 |
+| Opties bij "Invullen" | 3 | 4 |
+
+Basis gebruikt alleen deze eenvoudige signaalwoorden:
+- Oorzaak-gevolg: omdat, want, daardoor, daarom, dus
+- Tegenstelling: maar, toch
+- Opsomming: en, ook, bovendien
+- Tijd: eerst, daarna, toen, voordat, nadat, later
+
+**De drie oefenvormen:**
+- **Aanwijzen** — het kind klikt het signaalwoord zelf aan in de zin.
+- **Soort kiezen** — het signaalwoord is al gemarkeerd; het kind kiest welk soort het is.
+- **Invullen** — het signaalwoord ontbreekt; het kind kiest het juiste woord uit de opties.
+
+**Hoe "Oefen nog met: …" wordt bepaald:** dat is het soort met het laagste percentage goed
+van de zonet gemaakte ronde. Bij gelijkspel telt eerst het soort met de meeste fouten;
+is dat ook gelijk, dan de vaste volgorde hierboven (Oorzaak-gevolg, Tegenstelling,
+Opsomming, Tijd, Doel, Voorwaarde, Vergelijking, Samenvatting/conclusie).
+
 ## Voor de leerkracht
 
 De zinnen staan in de link die op de startpagina van de school staat (de "klaslink"). Er is

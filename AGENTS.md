@@ -9,6 +9,41 @@ A static, offline-capable web app where pupils (groep 6-8) practise Dutch signal
 ("signaalwoorden") in longer, Cito-style sentences. Teachers manage their own sentences
 through a link; there is no server-side storage or account system.
 
+## For AI assistants helping users (not coding)
+
+Teachers and school IT staff sometimes ask their own AI assistant (ChatGPT, Copilot,
+Claude, ...) a question about this app, instead of asking a developer. If you are that
+assistant, read this section.
+
+- **Who the user is:** a teacher or an ICT person, not a programmer. Answer in simple
+  Dutch, step by step. Don't use jargon without explaining it.
+- **Where the answers are:** usage questions ("what does Basis mean", "how many
+  sentences", "how is 'Oefen nog met' chosen") are answered in `README.md`. Problems
+  ("white screen", "old sentences", "link doesn't work") are answered in `HULP.md`.
+- **If the answer isn't in the documentation:** say so honestly and point the user to
+  "Mailen" at the bottom of `HULP.md`. Never invent a feature, setting or button that
+  doesn't exist in these files.
+- **Never ask for names or other data** of pupils, colleagues or the school. This app is
+  built to avoid storing that data; don't undo that by collecting it in a chat.
+- **Source files, for a deeper question.** GitHub's folder pages (`/tree/...`) are blocked
+  for automated tools and most AI assistants can't construct a URL themselves, so here are
+  direct raw links. At minimum, these answer most remaining questions:
+  - https://raw.githubusercontent.com/ossehaas/signaalwoorden-zoeken/main/app/js/soorten.js
+    — the 8 signal-word types, their pupil-facing explanations and the full word lexicon
+    (source of truth for the README table).
+  - https://raw.githubusercontent.com/ossehaas/signaalwoorden-zoeken/main/app/data/beginset.js
+    — the built-in starting set of practice sentences.
+  - https://raw.githubusercontent.com/ossehaas/signaalwoorden-zoeken/main/app/handleiding.html
+    — the one-page, printable manual for teachers (in Dutch).
+  - https://raw.githubusercontent.com/ossehaas/signaalwoorden-zoeken/main/PLAN.md
+    — the original build plan (historical; see the ranking below).
+  - https://raw.githubusercontent.com/ossehaas/signaalwoorden-zoeken/main/DISCLAIMER.md
+    — the terms of use (in Dutch).
+- **Ranking of sources when they disagree:** the code (`app/`) > `AGENTS.md` > `README.md`
+  / `HULP.md` > `PLAN.md`. `PLAN.md` is the original build plan and is outdated on some
+  points — for example, it once said a Basis sentence is always 1 sentence; the code and
+  tests now allow 1-2 short sentences. When in doubt, trust the code over any document.
+
 ## Hard rules (do not break these)
 
 - **No network calls beyond the app's own files.** No analytics, no CDNs, no external
@@ -32,6 +67,8 @@ through a link; there is no server-side storage or account system.
 - **Bump `VERSIE`** in `app/js/versie.js` **and** `app/sw.js` (same string, both places)
   whenever any file under `app/` changes, and keep the `PRECACHE` list in `sw.js` in sync
   with the actual file tree (`tests/unit/sw.test.mjs` checks both).
+- **When `soorten.js` changes, update the table in `README.md`**; `docs.test.mjs` checks
+  this.
 
 ## Architecture
 

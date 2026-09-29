@@ -1,5 +1,7 @@
 # PLAN: Signaalwoorden zoeken
 
+Historisch bouwplan. Waar dit afwijkt van AGENTS.md of de code, gelden die.
+
 Platform: **web** · slug: `signaalwoorden-zoeken` · request `2026-09-23-001`
 
 ## 1. Summary
