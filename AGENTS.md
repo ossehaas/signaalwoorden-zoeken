@@ -158,6 +158,8 @@ Basis sentences within this 1-2 rule and the existing 30-110 character range.
 
 - **Stale service-worker cache**: bump `VERSIE` in both `js/versie.js` and `sw.js`, and
   update `PRECACHE` in `sw.js`, whenever `app/` files change.
+- **Minimum browsers** (same as HULP.md): Chrome/Edge 105+, Safari/iPadOS 16.4+, Firefox 121+ — set by CSS `:has()`
+  (Chrome/Edge 105, Firefox 121) and `CompressionStream('deflate-raw')` (Safari 16.4).
 - **`CompressionStream`/`DecompressionStream`** need Safari 16.4+; the app falls back to
   an uncompressed `0.` link if unavailable, and shows a clear "browser too old" message
   when it can't decompress a `1.` link.
